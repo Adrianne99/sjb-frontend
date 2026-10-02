@@ -81,22 +81,25 @@ export const school = {
       code: "SHS",
       name: "Senior High School",
       level: "Grade 11 – 12",
+      // SAMPLE text in simple English — replace with the school's official description (and its strands).
       description:
-        "Grade 11 and Grade 12. [Placeholder] List the strands offered here.",
+        "Grade 11 and Grade 12. Get ready for college or work with core subjects, practical skills and good values. Choose a strand that matches your future plans.",
     },
     {
       code: "IT",
       name: "Information Technology",
       level: "College · 1st – 2nd Year",
+      // SAMPLE text — replace with the official program description.
       description:
-        "Two-year college program. [Placeholder] Short description of the program.",
+        "Learn how computers, programs and networks work. Practice coding, databases and computer security in hands-on classes, so you are ready for an IT job.",
     },
     {
       code: "HRS",
       name: "Hotel and Restaurant Services",
       level: "College · 1st – 2nd Year",
+      // SAMPLE text — replace with the official program description.
       description:
-        "Two-year college program. [Placeholder] Short description of the program.",
+        "Learn the skills used in hotels and restaurants: food and drink service, front office, housekeeping, and safety and cleanliness. Train in real kitchen and room setups.",
     },
   ],
 
