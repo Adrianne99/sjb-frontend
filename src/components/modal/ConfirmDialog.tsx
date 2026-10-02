@@ -3,7 +3,7 @@
 //   <ConfirmDialog open={open} title="Publish these grades?"
 //     description="Published grades will become visible to students."
 //     confirmLabel="Publish" onConfirm={publish} onCancel={close} loading={busy} />
-import type { ReactNode } from "react";
+import type { MouseEvent, ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { Modal } from "./Modal";
 
@@ -12,7 +12,8 @@ interface ConfirmDialogProps {
   title: string;
   description: ReactNode;
   confirmLabel: string;
-  onConfirm: () => void;
+  /** Receives the click event, e.g. to call event.preventDefault(). */
+  onConfirm: (event: MouseEvent<HTMLButtonElement>) => void;
   onCancel: () => void;
   loading?: boolean;
   tone?: "primary" | "danger";

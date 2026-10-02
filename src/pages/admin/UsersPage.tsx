@@ -213,6 +213,17 @@ export default function UsersPage() {
   );
 }
 
+/** "María Clara" → "maria.clara": the suggested username for a new staff account. */
+function usernameFromFirstName(firstName: string) {
+  return firstName
+    .normalize("NFD")
+    .replace(/\p{M}/gu, "") // remove accents (ñ → n, é → e)
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, ".")
+    .replace(/[^a-z0-9._-]/g, "");
+}
+
 function StaffFormModal({ open, user, onClose, onSaved }: { open: boolean; user: UserAccount | null; onClose: () => void; onSaved: (credentials: IssuedCredentials | null) => void }) {
   return (
     <Modal open={open} onClose={onClose} title={user ? "Edit account" : "New staff account"} size="md">
@@ -233,7 +244,17 @@ function StaffForm({ user, onClose, onSaved }: { user: UserAccount | null; onClo
   });
   const [saving, setSaving] = useState(false);
   const { errors, setFromError } = useFormErrors();
-  const set = (field: keyof typeof values) => (event: { target: { value: string } }) => setValues((current) => ({ ...current, [field]: event.target.value }));
+  // The username follows the first name until the admin types their own.
+  const [usernameEdited, setUsernameEdited] = useState(false);
+  const set = (field: keyof typeof values) => (event: { target: { value: string } }) => {
+    const value = event.target.value;
+    if (field === "username") setUsernameEdited(true);
+    setValues((current) => ({
+      ...current,
+      [field]: value,
+      ...(field === "firstName" && !user && !usernameEdited ? { username: usernameFromFirstName(value) } : {}),
+    }));
+  };
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -261,7 +282,7 @@ function StaffForm({ user, onClose, onSaved }: { user: UserAccount | null; onClo
       <div className="grid gap-4 sm:grid-cols-2">
         <TextInput label="First name" required value={values.firstName} onChange={set("firstName")} error={errors.firstName} />
         <TextInput label="Last name" required value={values.lastName} onChange={set("lastName")} error={errors.lastName} />
-        {!user && <TextInput label="Username" required value={values.username} onChange={set("username")} error={errors.username} hint="Lowercase, e.g. maria.santos" />}
+        {!user && <TextInput label="Username" required value={values.username} onChange={set("username")} error={errors.username} hint="Filled in from the first name. If it is taken, add the last name, e.g. maria.santos" />}
         <TextInput label="Email" type="email" required={!user} value={values.email} onChange={set("email")} error={errors.email} />
         <TextInput label="Position" placeholder="e.g. Registrar" value={values.position} onChange={set("position")} error={errors.position} />
         {!user && (

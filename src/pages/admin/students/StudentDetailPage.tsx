@@ -49,7 +49,9 @@ export default function StudentDetailPage() {
   useDocumentTitle(student?.fullName ?? "Student");
 
   if (error) return <ErrorState message={error} onRetry={reload} />;
-  if (loading || !student) return <LoadingState label="Loading student record..." />;
+  // Only on the first load (or another student). A refresh after an action keeps
+  // the page on screen, so popups like the new temporary password stay open.
+  if (!student || (loading && student.id !== studentId)) return <LoadingState label="Loading student record..." />;
 
   const archived = student.status === "ARCHIVED";
 
@@ -429,7 +431,10 @@ function AccountTab({ student, onChanged }: { student: StudentDetail; onChanged:
         confirmLabel="Issue password"
         loading={busy}
         onCancel={() => setConfirm(null)}
-        onConfirm={() => run(() => studentService.resetPassword(student.id), "New temporary password issued")}
+        onConfirm={(event) => {
+          event.preventDefault();
+          run(() => studentService.resetPassword(student.id), "New temporary password issued");
+        }}
       />
       <ConfirmDialog
         open={confirm === "toggle"}
