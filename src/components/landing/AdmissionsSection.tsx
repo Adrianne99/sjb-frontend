@@ -4,7 +4,6 @@ import { Link } from "react-router";
 import { ButtonLink } from "@/components/ui/Button";
 import { school } from "@/config/school";
 import { RequirementsList } from "./RequirementsList";
-import { TuitionFeesTable } from "./TuitionFeesTable";
 import { SectionHeading } from "./SectionHeading";
 
 export function AdmissionsSection() {
@@ -36,8 +35,6 @@ export function AdmissionsSection() {
         </ol>
 
         <RequirementsList />
-
-        <TuitionFeesTable />
 
         <div className="mt-16 flex flex-wrap items-center gap-x-8 gap-y-4 border-t border-white/15 pt-10">
           <ButtonLink to="/apply" variant="gold" size="lg" className="rounded-full! px-7!" rightIcon={<ArrowRight className="size-4" aria-hidden="true" />}>

@@ -1,7 +1,8 @@
 import { Reveal } from "@/components/ui/Reveal";
 import { school } from "@/config/school";
 import { cn } from "@/utils/cn";
-import { PlaceholderNote, SectionHeading } from "./SectionHeading";
+import { SectionHeading } from "./SectionHeading";
+import { TuitionFeesButton } from "./TuitionFeesButton";
 
 type Program = (typeof school.programs)[number];
 
@@ -47,7 +48,9 @@ export function ProgramsSection() {
           align="left"
           description="Senior High School (Grade 11 and 12) and two college programs: Information Technology and Hotel and Restaurant Services."
         />
-        <PlaceholderNote className="mt-3" />
+        <Reveal delay={120} className="mt-6">
+          <TuitionFeesButton />
+        </Reveal>
 
         <div className="mt-12 grid gap-6 lg:grid-cols-2">
           {featured && (
