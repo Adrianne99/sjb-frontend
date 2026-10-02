@@ -26,7 +26,8 @@ export function HeroSection() {
       />
 
       {/* The large bottom padding leaves room for the Mission & Vision cards that overlap the bottom of the hero. */}
-      <div className="mx-auto w-full max-w-7xl px-4 pb-36 sm:px-6 sm:pb-44 lg:px-8">
+      {/* Top padding keeps the headline below the website header on short screens (e.g. iPhone in-app browsers). */}
+      <div className="mx-auto w-full max-w-7xl px-4 pt-22 pb-36 sm:px-6 sm:pt-28 sm:pb-44 lg:px-8">
         <div className="max-w-3xl">
           <h1 id="hero-title" className="animate-rise text-4xl leading-[1.12] font-light tracking-tight text-white sm:text-5xl lg:text-6xl">
             {school.hero.headline}
