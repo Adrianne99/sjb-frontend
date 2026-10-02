@@ -1,3 +1,4 @@
+import { Reveal } from "@/components/ui/Reveal";
 import { ArrowRight } from "lucide-react";
 import { Link } from "react-router";
 import { ButtonLink } from "@/components/ui/Button";
@@ -20,7 +21,7 @@ export function AdmissionsSection() {
         {/* Timeline: a thin line with gold dots — across on desktop, down the side on phones. */}
         <ol className="mt-14 grid md:grid-cols-5">
           {school.admissionSteps.map((step, index) => (
-            <li key={step.title} className="relative border-l border-white/20 pb-10 pl-7 last:pb-0 md:border-t md:border-l-0 md:pt-8 md:pr-6 md:pb-0 md:pl-0">
+            <Reveal as="li" key={step.title} delay={index * 110} className="relative border-l border-white/20 pb-10 pl-7 last:pb-0 md:border-t md:border-l-0 md:pt-8 md:pr-6 md:pb-0 md:pl-0">
               <span aria-hidden="true" className="absolute top-1 -left-1.25 size-2.5 rounded-full bg-gold-400 md:-top-1.25 md:left-0" />
               <span className="font-display text-sm font-medium text-gold-300 tabular-nums" aria-hidden="true">
                 {String(index + 1).padStart(2, "0")}
@@ -30,7 +31,7 @@ export function AdmissionsSection() {
                 {step.title}
               </p>
               <p className="mt-2 text-sm leading-relaxed text-primary-200">{step.description}</p>
-            </li>
+            </Reveal>
           ))}
         </ol>
 

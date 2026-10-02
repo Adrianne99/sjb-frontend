@@ -2,6 +2,7 @@
 // the Registrar edits it in Settings -> Requirements, the website updates too.
 // Shown as a white checklist card (dark text on white = easy to read) on the
 // navy Admissions section.
+import { Reveal } from "@/components/ui/Reveal";
 import { CircleCheck } from "lucide-react";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useApi } from "@/hooks/useApi";
@@ -11,7 +12,7 @@ export function RequirementsList() {
   const { data, loading, error } = useApi(() => requirementService.listPublic(), []);
 
   return (
-    <div className="mt-20 overflow-hidden rounded-2xl bg-surface shadow-[0_24px_50px_-30px_rgba(0,0,0,0.6)] sm:mt-24 lg:grid lg:grid-cols-[1fr_1.6fr]">
+    <Reveal className="mt-20 overflow-hidden rounded-2xl bg-surface shadow-[0_24px_50px_-30px_rgba(0,0,0,0.6)] sm:mt-24 lg:grid lg:grid-cols-[1fr_1.6fr]">
       {/* Left: what this list is */}
       <div className="border-b border-border bg-gold-50/60 p-8 sm:p-10 lg:border-r lg:border-b-0">
         <p className="text-xs font-semibold tracking-[0.2em] text-gold-700 uppercase">Checklist</p>
@@ -50,6 +51,6 @@ export function RequirementsList() {
           </ul>
         )}
       </div>
-    </div>
+    </Reveal>
   );
 }

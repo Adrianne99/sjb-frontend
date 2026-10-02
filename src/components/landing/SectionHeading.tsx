@@ -1,3 +1,4 @@
+import { Reveal } from "@/components/ui/Reveal";
 import type { ReactNode } from "react";
 import { cn } from "@/utils/cn";
 
@@ -17,7 +18,7 @@ interface SectionHeadingProps {
  */
 export function SectionHeading({ id, eyebrow, title, description, align = "center", inverted = false }: SectionHeadingProps) {
   return (
-    <div className={cn("max-w-2xl", align === "center" && "mx-auto text-center")}>
+    <Reveal className={cn("max-w-2xl", align === "center" && "mx-auto text-center")}>
       <p
         className={cn(
           "flex items-center gap-3 text-xs font-semibold tracking-[0.28em] uppercase",
@@ -32,17 +33,17 @@ export function SectionHeading({ id, eyebrow, title, description, align = "cente
         {title}
       </h2>
       {description && <p className={cn("mt-4 text-base leading-relaxed", inverted ? "text-primary-200" : "text-ink-muted")}>{description}</p>}
-    </div>
+    </Reveal>
   );
 }
 
 /** Smaller heading inside a section, e.g. "Admission requirements". `inverted` = on a navy background. */
 export function SubHeading({ title, description, inverted = true }: { title: string; description?: string; inverted?: boolean }) {
   return (
-    <div className="max-w-2xl">
+    <Reveal className="max-w-2xl">
       <h3 className={cn("font-display text-2xl font-light sm:text-3xl", inverted ? "text-white" : "text-primary-900")}>{title}</h3>
       {description && <p className={cn("mt-2 text-sm leading-relaxed", inverted ? "text-primary-200" : "text-ink-muted")}>{description}</p>}
-    </div>
+    </Reveal>
   );
 }
 

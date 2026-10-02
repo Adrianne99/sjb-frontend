@@ -3,6 +3,7 @@
 // Home page:            the newest post large, the next ones as small rows beside it.
 // Announcements page:   every post as a grid of photo tiles (`layout="grid"`).
 // Clicking a post opens it in full at /announcements/:id.
+import { Reveal } from "@/components/ui/Reveal";
 import { ArrowRight, Megaphone } from "lucide-react";
 import { Link } from "react-router";
 import { Skeleton } from "@/components/ui/Skeleton";
@@ -57,21 +58,23 @@ export function AnnouncementsSection({ limit = 4, showAllLink = true, layout = "
             </div>
           ) : layout === "grid" ? (
             <ul className="grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
-              {items.map((announcement) => (
-                <li key={announcement.id}>
+              {items.map((announcement, index) => (
+                <Reveal as="li" key={announcement.id} delay={(index % 3) * 110}>
                   <AnnouncementTile announcement={announcement} />
-                </li>
+                </Reveal>
               ))}
             </ul>
           ) : (
             <div className="grid gap-10 lg:grid-cols-[1.3fr_1fr] lg:gap-14">
-              <AnnouncementFeature announcement={newest} />
+              <Reveal>
+                <AnnouncementFeature announcement={newest} />
+              </Reveal>
               {rest.length > 0 && (
                 <ul className="divide-y divide-border border-y border-border lg:self-start">
-                  {rest.map((announcement) => (
-                    <li key={announcement.id}>
+                  {rest.map((announcement, index) => (
+                    <Reveal as="li" key={announcement.id} delay={(index + 1) * 110}>
                       <AnnouncementRow announcement={announcement} />
-                    </li>
+                    </Reveal>
                   ))}
                 </ul>
               )}

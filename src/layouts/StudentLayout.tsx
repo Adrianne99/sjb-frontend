@@ -2,7 +2,7 @@
 // navigation on phones (grades, schedule, balance and profile are one tap away).
 import { LogOut, Menu } from "lucide-react";
 import { Suspense, useCallback, useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { MobileDrawer } from "@/components/sidebar/MobileDrawer";
 import { Sidebar } from "@/components/sidebar/Sidebar";
 import { Logo } from "@/components/ui/Logo";
@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/utils/cn";
 
 export function StudentLayout() {
+  const { pathname } = useLocation();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -60,7 +61,10 @@ export function StudentLayout() {
 
         <main id="main" className="mx-auto w-full max-w-6xl px-4 pt-5 pb-28 sm:px-6 lg:px-8 lg:pt-8 lg:pb-10">
           <Suspense fallback={<LoadingState label="Loading..." />}>
+            {/* Soft fade each time the page changes (key = the page address). */}
+          <div key={pathname} className="animate-page-in">
             <Outlet />
+          </div>
           </Suspense>
         </main>
       </div>

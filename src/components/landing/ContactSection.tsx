@@ -1,3 +1,4 @@
+import { Reveal } from "@/components/ui/Reveal";
 import { ArrowUpRight } from "lucide-react";
 import { FacebookIcon } from "@/components/ui/SocialIcons";
 import { school } from "@/config/school";
@@ -38,14 +39,14 @@ export function ContactSection() {
 
         {/* A clean list with thin dividers instead of icon cards. */}
         <dl className="divide-y divide-border border-y border-border">
-          {items.map((item) => (
-            <div key={item.label} className="grid gap-1 py-6 sm:grid-cols-[10rem_1fr] sm:gap-6">
+          {items.map((item, index) => (
+            <Reveal key={item.label} delay={index * 90} className="grid gap-1 py-6 sm:grid-cols-[10rem_1fr] sm:gap-6">
               <dt className="text-xs font-semibold tracking-[0.2em] text-gold-700 uppercase sm:pt-1.5">{item.label}</dt>
               <dd>
                 <p className="font-display text-lg font-light wrap-break-word text-primary-900 sm:text-xl">{item.value}</p>
                 {item.note && <p className="mt-1 text-xs text-ink-muted">{item.note}</p>}
               </dd>
-            </div>
+            </Reveal>
           ))}
         </dl>
       </div>

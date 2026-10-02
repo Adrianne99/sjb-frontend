@@ -1,3 +1,4 @@
+import { Reveal } from "@/components/ui/Reveal";
 import { school } from "@/config/school";
 import { cn } from "@/utils/cn";
 import { PlaceholderNote, SectionHeading } from "./SectionHeading";
@@ -13,7 +14,7 @@ function ProgramPanel({ program, featured }: { program: Program; featured: boole
   return (
     <article
       className={cn(
-        "relative flex h-full flex-col justify-between overflow-hidden rounded-2xl",
+        "relative flex h-full flex-col justify-between overflow-hidden rounded-2xl transition duration-500 hover:-translate-y-1 hover:shadow-[0_30px_60px_-30px_rgba(12,24,51,0.45)]",
         featured ? "min-h-80 bg-primary-900 p-8 text-white sm:p-10 lg:min-h-full" : "border border-border bg-surface p-8",
       )}
     >
@@ -50,10 +51,16 @@ export function ProgramsSection() {
         <PlaceholderNote className="mt-3" />
 
         <div className="mt-12 grid gap-6 lg:grid-cols-2">
-          {featured && <ProgramPanel program={featured} featured />}
+          {featured && (
+            <Reveal className="h-full">
+              <ProgramPanel program={featured} featured />
+            </Reveal>
+          )}
           <div className="grid gap-6">
             {others.map((program, index) => (
-              <ProgramPanel key={`${program.code}-${index}`} program={program} featured={false} />
+              <Reveal key={`${program.code}-${index}`} delay={(index + 1) * 120} className="h-full">
+                <ProgramPanel program={program} featured={false} />
+              </Reveal>
             ))}
           </div>
         </div>

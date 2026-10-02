@@ -1,3 +1,4 @@
+import { Reveal } from "@/components/ui/Reveal";
 import { Compass, Eye, type LucideIcon } from "lucide-react";
 import { school } from "@/config/school";
 import { SectionHeading } from "./SectionHeading";
@@ -8,7 +9,7 @@ import { SectionHeading } from "./SectionHeading";
  */
 function StatementCard({ icon: Icon, label, text }: { icon: LucideIcon; label: string; text: string }) {
   return (
-    <article className="rounded-2xl border border-border bg-surface p-8 shadow-[0_24px_50px_-28px_rgba(12,24,51,0.45)] sm:p-10">
+    <article className="h-full rounded-2xl border border-border bg-surface p-8 transition-shadow duration-500 hover:shadow-[0_30px_60px_-28px_rgba(12,24,51,0.5)] shadow-[0_24px_50px_-28px_rgba(12,24,51,0.45)] sm:p-10">
       <div className="flex items-center gap-3">
         <span className="flex size-10 items-center justify-center rounded-full border border-gold-300 text-gold-600" aria-hidden="true">
           <Icon className="size-4.5" strokeWidth={1.75} />
@@ -28,8 +29,13 @@ export function AboutSection() {
         {/* Mission & Vision float over the bottom edge of the hero (negative top margin).
             scroll-mt on the section keeps the cards in view when the menu slides to "About". */}
         <div className="relative z-10 -mt-24 grid gap-6 sm:-mt-28 md:grid-cols-2">
-          <StatementCard icon={Compass} label="Our Mission" text={about.mission} />
-          <StatementCard icon={Eye} label="Our Vision" text={about.vision} />
+          {/* Part of the hero visually, so they rise in right after the hero text (not on scroll). */}
+          <div className="animate-rise [animation-delay:450ms]">
+            <StatementCard icon={Compass} label="Our Mission" text={about.mission} />
+          </div>
+          <div className="animate-rise [animation-delay:570ms]">
+            <StatementCard icon={Eye} label="Our Vision" text={about.vision} />
+          </div>
         </div>
 
         <div className="mt-20 grid items-start gap-8 sm:mt-24 lg:grid-cols-[1fr_1.2fr] lg:gap-16">
@@ -48,13 +54,13 @@ export function AboutSection() {
           </p>
           <ul className="mt-10 grid gap-10 sm:grid-cols-3 sm:gap-0 sm:divide-x sm:divide-border">
             {about.values.map((value, index) => (
-              <li key={value.title} className="sm:px-8 sm:first:pl-0 sm:last:pr-0">
+              <Reveal as="li" key={value.title} delay={index * 120} className="sm:px-8 sm:first:pl-0 sm:last:pr-0">
                 <span className="font-display text-sm font-medium text-gold-600 tabular-nums" aria-hidden="true">
                   {String(index + 1).padStart(2, "0")}
                 </span>
                 <p className="mt-3 font-display text-2xl font-light text-primary-900">{value.title}</p>
                 <p className="mt-3 text-sm leading-relaxed text-ink-muted">{value.description}</p>
-              </li>
+              </Reveal>
             ))}
           </ul>
         </div>

@@ -2,7 +2,7 @@
 // top bar with student search, notifications and the current user.
 import { Menu, Search } from "lucide-react";
 import { Suspense, useCallback, useState, type FormEvent } from "react";
-import { Outlet, useNavigate } from "react-router";
+import { Outlet, useLocation, useNavigate } from "react-router";
 import { NotificationsMenu } from "@/components/navbar/NotificationsMenu";
 import { MobileDrawer } from "@/components/sidebar/MobileDrawer";
 import { Sidebar } from "@/components/sidebar/Sidebar";
@@ -13,6 +13,7 @@ import { ADMIN_NAV } from "@/config/navigation";
 import { useAuth } from "@/hooks/useAuth";
 
 export function AdminLayout() {
+  const { pathname } = useLocation();
   const { user, logout, can } = useAuth();
   const navigate = useNavigate();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -92,7 +93,10 @@ export function AdminLayout() {
 
         <main id="main" className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
           <Suspense fallback={<LoadingState label="Loading page..." />}>
+            {/* Soft fade each time the page changes (key = the page address). */}
+          <div key={pathname} className="animate-page-in">
             <Outlet />
+          </div>
           </Suspense>
         </main>
       </div>

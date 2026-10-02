@@ -1,6 +1,7 @@
 // "Tuition fee options" on the public website. The numbers come from the
 // database (Settings → Tuition & fees), so the website always matches what
 // the Accounting Office charges.
+import { Reveal } from "@/components/ui/Reveal";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { useApi } from "@/hooks/useApi";
 import { feeService } from "@/services/fee.service";
@@ -40,7 +41,7 @@ export function TuitionFeesTable() {
       ) : (
         <>
           {college.length > 0 && (
-            <div className="mt-8 overflow-x-auto rounded-xl bg-surface shadow-[0_24px_50px_-30px_rgba(0,0,0,0.6)]">
+            <Reveal className="mt-8 overflow-x-auto rounded-xl bg-surface shadow-[0_24px_50px_-30px_rgba(0,0,0,0.6)]">
               <table className="w-full min-w-2xl text-sm">
                 <caption className="sr-only">College tuition per term, paid in installments</caption>
                 <thead className="border-b border-border">
@@ -73,7 +74,7 @@ export function TuitionFeesTable() {
                   ))}
                 </tbody>
               </table>
-            </div>
+            </Reveal>
           )}
 
           <dl className="mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-2 lg:grid-cols-4">
