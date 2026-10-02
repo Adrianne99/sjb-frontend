@@ -32,7 +32,7 @@ export function AnnouncementsSection({ limit = 4, showAllLink = true, layout = "
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {showHeading && (
           <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
-            <SectionHeading id="announcements-heading" eyebrow="News & updates" title="Announcements" align="left" />
+            <SectionHeading id="announcements-heading" title="Announcements" align="left" />
             {showAllLink && items.length > 0 && (
               <Link to="/announcements" className="group inline-flex items-center gap-2 text-sm font-medium tracking-[0.12em] text-primary-900 uppercase">
                 <span className="border-b border-primary-900/30 pb-1 transition-colors group-hover:border-gold-500">Show all announcements</span>

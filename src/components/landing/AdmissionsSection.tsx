@@ -12,7 +12,7 @@ export function AdmissionsSection() {
     <section id="admissions" aria-labelledby="admissions-heading" className="bg-primary-900 py-20 sm:py-28">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="grid gap-6 lg:grid-cols-2 lg:items-end">
-          <SectionHeading id="admissions-heading" eyebrow="Admissions" title="How to enroll" align="left" inverted />
+          <SectionHeading id="admissions-heading" title="How to enroll" align="left" inverted />
           <p className="text-base leading-relaxed text-primary-200 lg:max-w-md lg:justify-self-end">
             Five steps for Senior High School and college applicants — start online, finish at the school.
           </p>

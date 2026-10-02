@@ -19,7 +19,6 @@ export function ContactSection() {
         <div>
           <SectionHeading
             id="contact-heading"
-            eyebrow="Get in touch"
             title="Contact the school"
             align="left"
             description="For admissions, enrollment and account concerns, reach the school through the official channels."

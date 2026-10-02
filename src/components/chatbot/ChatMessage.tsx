@@ -17,7 +17,7 @@ export function ChatMessage({ entry }: { entry: ChatEntry }) {
       )}
       <p
         className={cn(
-          "max-w-[82%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed whitespace-pre-line",
+          "max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[15px] leading-relaxed whitespace-pre-line sm:max-w-[82%] sm:text-sm",
           isUser ? "rounded-br-sm bg-primary-600 text-white" : "rounded-bl-sm bg-surface-muted text-ink",
         )}
       >

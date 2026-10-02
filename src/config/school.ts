@@ -36,7 +36,6 @@ export const school = {
     //                   60–70 shows more of the photo; 85–90 makes text stand out more.
     overlayColor: "#152851",
     overlayOpacity: 80,
-    eyebrow: "Kalentong, Mandaluyong City",
     headline: "Shaping Students for Excellence, Character, and Service.",
     subheadline:
       "At SJBIAS, we focus on hands-on learning, good character, and affordable education. Whether you want to learn tech, business, or the arts, we are here to guide you every step of the way.",

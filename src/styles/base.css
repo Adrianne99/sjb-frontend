@@ -82,3 +82,14 @@
     }
   }
 }
+
+/* no-zoom-on-focus: iPhone Safari zooms into inputs smaller than 16px. On phones,
+   all text fields use 16px so the page never jumps when you tap a field.
+   (Outside @layer on purpose, so it overrides utility classes like text-sm.) */
+@media (max-width: 639.98px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}

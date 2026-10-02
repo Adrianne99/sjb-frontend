@@ -43,7 +43,6 @@ export function ProgramsSection() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <SectionHeading
           id="programs-title"
-          eyebrow="Academics"
           title="Academic programs"
           align="left"
           description="Senior High School (Grade 11 and 12) and two college programs: Information Technology and Hotel and Restaurant Services."

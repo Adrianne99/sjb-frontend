@@ -15,8 +15,7 @@ export function RequirementsList() {
     <Reveal className="mt-20 overflow-hidden rounded-2xl bg-surface shadow-[0_24px_50px_-30px_rgba(0,0,0,0.6)] sm:mt-24 lg:grid lg:grid-cols-[1fr_1.6fr]">
       {/* Left: what this list is */}
       <div className="border-b border-border bg-gold-50/60 p-8 sm:p-10 lg:border-r lg:border-b-0">
-        <p className="text-xs font-semibold tracking-[0.2em] text-gold-700 uppercase">Checklist</p>
-        <h3 className="mt-3 font-display text-2xl font-light text-primary-900 sm:text-3xl">Admission requirements</h3>
+        <h3 className="font-display text-2xl font-light text-primary-900 sm:text-3xl">Admission requirements</h3>
         <p className="mt-3 text-base leading-relaxed text-ink-soft">Prepare the original copies and bring them to the Registrar&apos;s Office when you visit.</p>
         {data && data.length > 0 && (
           <p className="mt-6 text-sm font-medium text-primary-900">
