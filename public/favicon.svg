@@ -1,0 +1,9 @@
+<!-- PLACEHOLDER CREST. Replace with the official Saint John Bosco logo
+     (e.g. assets/logo/sjb-logo.png) and update `logo.src` in src/config/school.ts. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 140" role="img" aria-label="Saint John Bosco Institute of Arts and Sciences">
+  <path d="M60 4 L112 20 V70 C112 104 88 126 60 136 C32 126 8 104 8 70 V20 Z" fill="#152851" stroke="#d29b12" stroke-width="5"/>
+  <path d="M60 14 L102 27 V70 C102 98 82 116 60 125 C38 116 18 98 18 70 V27 Z" fill="none" stroke="#ffffff" stroke-opacity="0.35" stroke-width="1.5"/>
+  <path d="M34 50 C44 46 54 47 60 52 C66 47 76 46 86 50 V78 C76 74 66 75 60 80 C54 75 44 74 34 78 Z" fill="#ffffff"/>
+  <path d="M60 52 V80" stroke="#152851" stroke-width="2"/>
+  <text x="60" y="108" text-anchor="middle" font-family="IBM Plex Sans, Arial, sans-serif" font-weight="700" font-size="20" fill="#e5b324" letter-spacing="2">SJB</text>
+</svg>

@@ -1,0 +1,10 @@
+// One import for every type:  import type { StudentDetail, Payment } from "@/types";
+export * from "./academic";
+export * from "./api";
+export * from "./applications";
+export * from "./auth";
+export * from "./finance";
+export * from "./grades";
+export * from "./misc";
+export * from "./requirements";
+export * from "./students";
