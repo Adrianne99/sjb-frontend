@@ -130,12 +130,12 @@ function CollectionsReport({ dateFrom, dateTo, onChange }: { dateFrom: string; d
         <LoadingState label="Loading collections..." />
       ) : (
         <>
-          <div className="grid gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <StatCard label="Total collected" value={formatMoney(data.total)} icon={Banknote} accent="gold" hint={`${formatDate(dateFrom)} – ${formatDate(dateTo)}`} />
             <StatCard label="Payments recorded" value={data.paymentCount} icon={Receipt} />
             <StatCard label="Voided payments" value={data.voidedCount} icon={Ban} accent="warning" hint={`${formatMoney(data.voidedTotal)} not counted`} />
           </div>
-          <div className="grid gap-6 lg:grid-cols-2">
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Card>
               <CardHeader title="By payment method" />
               <DataTable
@@ -174,7 +174,7 @@ function OutstandingReport({ semesterId, page, termOptions, onTermChange, onPage
   return (
     <div className="space-y-6">
       {summary && (
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <StatCard label="Total outstanding" value={formatMoney(summary.totalOutstanding)} icon={Wallet} accent="gold" />
           <StatCard label="Students with a balance" value={summary.studentCount} icon={Users} />
         </div>

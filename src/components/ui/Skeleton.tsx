@@ -23,7 +23,7 @@ export function SkeletonRows({ rows = 5 }: { rows?: number }) {
 /** Skeleton for a grid of stat cards. */
 export function SkeletonCards({ count = 4 }: { count?: number }) {
   return (
-    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-hidden="true">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-hidden="true">
       {Array.from({ length: count }, (_, index) => (
         <div key={index} className="rounded-lg border border-border bg-surface p-5">
           <Skeleton className="h-3 w-24" />

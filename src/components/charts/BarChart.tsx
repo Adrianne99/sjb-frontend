@@ -26,14 +26,15 @@ export function BarChart({ data, title, orientation = "vertical", valueLabel }: 
     <figure>
       {orientation === "vertical" ? (
         <div className="flex h-48 items-end gap-2 border-b border-border pt-6" aria-hidden="true">
-          {data.map((item) => (
+          {data.map((item, index) => (
             <div key={item.label} className="flex h-full min-w-0 flex-1 flex-col items-center justify-end gap-2">
               <div className="group relative flex h-full w-full max-w-14 items-end">
                 <div
                   className="w-full rounded-t-[4px] bg-primary-600 transition-colors hover:bg-primary-800"
                   style={{ height: `${Math.max(item.value > 0 ? 2 : 0, (item.value / max) * 100)}%` }}
                 />
-                <Tooltip label={item.label} value={item.display} className="bottom-full mb-1" />
+                {/* Bars on the right half open their tooltip to the left, so it never sticks out of the card. */}
+                <Tooltip label={item.label} value={item.display} className={cn("bottom-full mb-1", index < data.length / 2 ? "left-0" : "right-0")} />
               </div>
             </div>
           ))}
@@ -90,7 +91,8 @@ function Tooltip({ label, value, className }: { label: string; value: string; cl
   return (
     <span
       className={cn(
-        "pointer-events-none absolute z-10 rounded-md bg-primary-950 px-2 py-1 text-xs whitespace-nowrap text-white opacity-0 shadow-md transition-opacity group-hover:opacity-100",
+        // Hidden (not just invisible) until hovered, so it never makes the page wider.
+        "pointer-events-none absolute z-10 hidden rounded-md bg-primary-950 px-2 py-1 text-xs whitespace-nowrap text-white shadow-md group-hover:block",
         className,
       )}
     >

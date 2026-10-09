@@ -47,6 +47,17 @@ export interface SubjectGrade {
   status: GradeStatus;
 }
 
+/** A teacher's "Submit for review" of one class. */
+export interface GradeSubmission {
+  status: "SUBMITTED" | "RETURNED" | "PUBLISHED";
+  submittedAt: string;
+  submittedBy: string | null;
+  reviewedAt: string | null;
+  reviewedBy: string | null;
+  /** Why staff returned it. */
+  note: string | null;
+}
+
 export interface ClassOffering {
   semesterId: number;
   subject: { id: number; code: string; name: string; units: number };
@@ -57,6 +68,7 @@ export interface ClassOffering {
   irregularCount: number;
   draftCount: number;
   publishedCount: number;
+  submission: GradeSubmission | null;
 }
 
 export interface ClassRoster {
@@ -66,6 +78,7 @@ export interface ClassRoster {
     section: ClassOffering["section"];
     instructor: ClassOffering["instructor"];
   };
+  submission: GradeSubmission | null;
   gradingConfig: GradingConfig;
   students: Array<{ enrollmentId: number; student: StudentSummary; irregular: boolean; homeSectionName: string | null; grade: Grade | null }>;
 }

@@ -24,9 +24,9 @@ export const school = {
 
   hero: {
     /** Replace this file to change the hero photo. A navy fallback shows if it is missing. */
-    backgroundImage: "/assets/images/landing/campus-front.png",
-    /** Which part of the photo stays visible when it is cropped (CSS background-position). "center 30%" keeps the school sign in view. */
-    backgroundPosition: "center 30%",
+    backgroundImage: "/assets/images/landing/01_hero_students.jpg",
+    /** Which part of the photo stays visible when it is cropped (CSS background-position). "center" keeps the building and students in view. */
+    backgroundPosition: "center",
     // --- Hero overlay (the blue layer over the WHOLE photo) -------------------
     // overlayColor:   a hex color. Ideas:
     //                   "#152851" navy (default)   "#0c1833" darkest navy
@@ -45,6 +45,8 @@ export const school = {
 
   about: {
     placeholder: true,
+    /** Photo beside the "About" text. Replace the file to change it. */
+    image: "/assets/images/landing/07_campus.jpg",
     intro:
       "Saint John Bosco Institute of Arts and Sciences is a welcoming learning community located in Kalentong, Mandaluyong. For years, our school has provided accessible, quality education to local youths and working students who want to build a better future. We take pride in serving hardworking learners by teaching practical knowledge, technical skills, and good moral values so they can succeed in their chosen careers and help their families.",
     mission:
@@ -80,6 +82,8 @@ export const school = {
       code: "SHS",
       name: "Senior High School",
       level: "Grade 11 – 12",
+      /** Card photo. Put the file in public/assets/images/landing/ — a navy panel shows until it exists. */
+      image: "/assets/images/landing/04_senior_high_students.jpg",
       // SAMPLE text in simple English — replace with the school's official description (and its strands).
       description:
         "Grade 11 and Grade 12. Get ready for college or work with core subjects, practical skills and good values. Choose a strand that matches your future plans.",
@@ -88,6 +92,7 @@ export const school = {
       code: "IT",
       name: "Information Technology",
       level: "College · 1st – 2nd Year",
+      image: "/assets/images/landing/05_information_technology.jpg",
       // SAMPLE text — replace with the official program description.
       description:
         "Learn how computers, programs and networks work. Practice coding, databases and computer security in hands-on classes, so you are ready for an IT job.",
@@ -96,6 +101,7 @@ export const school = {
       code: "HRS",
       name: "Hotel and Restaurant Services",
       level: "College · 1st – 2nd Year",
+      image: "/assets/images/landing/06_hotel_restaurant_services.jpg",
       // SAMPLE text — replace with the official program description.
       description:
         "Learn the skills used in hotels and restaurants: food and drink service, front office, housekeeping, and safety and cleanliness. Train in real kitchen and room setups.",
@@ -134,10 +140,26 @@ export const school = {
   contact: {
     placeholder: true,
     address: "Kalentong, Mandaluyong City, Metro Manila, Philippines",
-    addressNote: "#55 Shaw Blvd, General Kalentong, Mandaluyong City, 1550 Metro Manila, Phillippines",
+    addressNote: "#55 Shaw Blvd, General Kalentong, Mandaluyong City, 1550 Metro Manila, Philippines",
     phone: "(02) 0000-0000",
     email: "Sjb@school.edu.ph",
     officeHours: "Monday to Friday, 8:00 AM – 5:00 PM",
+  },
+
+  /** Other photos used around the app (files in public/assets/images/landing/). */
+  images: {
+    /** Login and password pages (left panel, large screens). */
+    signIn: "/assets/images/landing/02_don_bosco_statue.jpg",
+    /** Don Bosco statue fading in at the top-right of "Academic programs" (large screens). */
+    programsStatue: "/assets/images/landing/03_don_bosco_closeup.jpg",
+    /** Title band at the top of inner pages (Announcements, Apply, Privacy, Terms). */
+    pageBanner: "/assets/images/landing/03_don_bosco_closeup.jpg",
+    /** Announcements without their own photo get one of these (always the same one per announcement). */
+    announcementFallbacks: [
+      "/assets/images/landing/08_student_writing.jpg",
+      "/assets/images/landing/09_school_celebration.jpg",
+      "/assets/images/landing/10_library_student.jpg",
+    ],
   },
 
   social: {

@@ -8,6 +8,8 @@ import { GRADE_REMARK_LABELS } from "@/utils/labels";
 export function ReportCardDocument({ card }: { card: ReportCard }) {
   return (
     <article className="print-area mx-auto max-w-4xl overflow-hidden rounded-lg border border-border bg-surface shadow-sm" aria-label={`Report card, ${card.term.label}`}>
+      {/* Report cards print in LANDSCAPE (only while a report card is on screen; other printouts stay portrait). */}
+      <style>{"@media print { @page { size: A4 landscape; margin: 10mm; } }"}</style>
       {/* Letterhead */}
       <header className="flex items-center gap-4 border-b-4 border-gold-400 bg-primary-900 px-6 py-5 text-white sm:px-8">
         <img src={school.logo.src} alt={school.logo.alt} className="h-16 w-auto shrink-0 object-contain" />
@@ -31,7 +33,7 @@ export function ReportCardDocument({ card }: { card: ReportCard }) {
         )}
 
         {/* Student identity */}
-        <dl className="grid gap-x-8 gap-y-3 rounded-lg bg-surface-muted p-4 text-sm sm:grid-cols-2">
+        <dl className="grid grid-cols-1 gap-x-8 gap-y-3 rounded-lg bg-surface-muted p-4 text-sm sm:grid-cols-2 print:grid-cols-3">
           <div>
             <dt className="text-xs text-ink-muted">Student name</dt>
             <dd className="font-medium text-ink">{card.student.formalName}</dd>

@@ -15,6 +15,7 @@ import ResetPasswordPage from "@/pages/auth/ResetPasswordPage";
 import HomePage from "@/pages/landing/HomePage";
 import { AnnouncementsPage, LegalPage } from "@/pages/landing/InfoPages";
 import NotFoundPage from "@/pages/NotFoundPage";
+import { OFFICE_ROLES } from "@/config/roles";
 import { ProtectedRoute } from "./ProtectedRoute";
 import { RoleRoute } from "./RoleRoute";
 
@@ -38,6 +39,7 @@ const ApplicationsPage = lazy(() => import("@/pages/admin/ApplicationsPage"));
 const ApplyPage = lazy(() => import("@/pages/landing/ApplyPage"));
 const AnnouncementDetailPage = lazy(() => import("@/pages/landing/AnnouncementDetailPage"));
 const GradesPage = lazy(() => import("@/pages/admin/GradesPage"));
+const AccountPage = lazy(() => import("@/pages/admin/AccountPage"));
 const SchedulesPage = lazy(() => import("@/pages/admin/SchedulesPage"));
 const PaymentsPage = lazy(() => import("@/pages/admin/PaymentsPage"));
 const ReportsPage = lazy(() => import("@/pages/admin/ReportsPage"));
@@ -88,7 +90,7 @@ export function AppRoutes() {
           </Route>
         </Route>
 
-        <Route element={<RoleRoute roles={["ADMIN", "STAFF"]} />}>
+        <Route element={<RoleRoute roles={OFFICE_ROLES} />}>
           <Route path="admin" element={<AdminLayout />}>
             <Route index element={<AdminDashboardPage />} />
 
@@ -104,6 +106,12 @@ export function AppRoutes() {
             </Route>
             <Route element={<RoleRoute permission="enrollments:read" />}>
               <Route path="enrollment" element={<EnrollmentPage />} />
+            </Route>
+            <Route element={<RoleRoute permission="account:self" />}>
+              <Route path="account" element={<AccountPage />} />
+            </Route>
+            <Route element={<RoleRoute permission="teaching:own" />}>
+              <Route path="my-classes" element={<GradesPage teacher />} />
             </Route>
             <Route element={<RoleRoute permission="grades:read" />}>
               <Route path="grades" element={<GradesPage />} />

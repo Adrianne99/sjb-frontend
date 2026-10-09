@@ -15,7 +15,7 @@ export default function StudentReportCardPage() {
 
   return (
     // Same centered width as the report card, so the term picker lines up with its left edge.
-    <div className="mx-auto max-w-4xl">
+    <div className="mx-auto max-w-4xl print:max-w-none">
       <div className="no-print">
         {data && data.availableTerms.length > 1 && (
           <Select

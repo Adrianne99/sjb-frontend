@@ -91,7 +91,7 @@ function EnrollmentManager({ enrollmentId, onChanged }: { enrollmentId: number; 
               </Button>
             )}
             {can("grades:read") && (
-              <ButtonLink to={`/admin/enrollments/${data.id}/report-card`} variant="ghost" size="sm" leftIcon={<FileText className="size-4" aria-hidden="true" />}>
+              <ButtonLink to={`/admin/enrollments/${data.id}/report-card`} variant="primary" size="sm" leftIcon={<FileText className="size-4" aria-hidden="true" />}>
                 Report card
               </ButtonLink>
             )}
@@ -147,7 +147,7 @@ function EditEnrollmentForm({ enrollment, onCancel, onSaved }: { enrollment: Enr
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-primary-200 bg-primary-50/40 p-4" noValidate>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Select label="Status" value={values.status} onChange={(event) => setValues({ ...values, status: event.target.value as EnrollmentStatus })} options={toOptions(ENROLLMENT_STATUS_LABELS)} error={errors.status} />
         <Select label="Year level" value={values.yearLevel} onChange={(event) => setValues({ ...values, yearLevel: event.target.value, sectionId: "" })} options={levelOptions} error={errors.yearLevel} />
         <Select label="Section" placeholder="No section" value={values.sectionId} onChange={(event) => setValues({ ...values, sectionId: event.target.value })} options={sectionOptions} error={errors.sectionId} />

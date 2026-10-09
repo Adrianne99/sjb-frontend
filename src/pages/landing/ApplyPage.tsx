@@ -134,8 +134,8 @@ function DocumentsToBring({ documents }: { documents: ApplicationFormOptions["re
 function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <fieldset className="border-t border-border pt-6 first:border-t-0 first:pt-0">
-      <legend className="text-xs font-semibold tracking-[0.2em] text-gold-700 uppercase">{title}</legend>
-      <div className="mt-4 grid gap-4 sm:grid-cols-2">{children}</div>
+      <legend className="font-display text-base font-semibold text-primary-900">{title}</legend>
+      <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">{children}</div>
     </fieldset>
   );
 }
@@ -231,17 +231,17 @@ function ApplicationForm({ options, onSubmitted }: { options: ApplicationFormOpt
           <FormSection title="Contact details">
             <TextInput label="Email" type="email" required autoComplete="email" value={values.email} onChange={text("email")} error={errors.email} hint="We send your reference number and updates here." />
             <TextInput label="Mobile number" type="tel" required autoComplete="tel" inputMode="tel" value={values.contactNumber} onChange={text("contactNumber")} placeholder="0917 123 4567" error={errors.contactNumber} />
-            <TextInput label="House no. / street" autoComplete="address-line1" value={values.addressLine ?? ""} onChange={optional("addressLine")} maxLength={255} className="sm:col-span-2" error={errors.addressLine} />
-            <TextInput label="Barangay" value={values.barangay ?? ""} onChange={optional("barangay")} maxLength={100} error={errors.barangay} />
-            <TextInput label="City / municipality" autoComplete="address-level2" value={values.city ?? ""} onChange={optional("city")} maxLength={100} error={errors.city} />
-            <TextInput label="Province" autoComplete="address-level1" value={values.province ?? ""} onChange={optional("province")} maxLength={100} error={errors.province} />
-            <TextInput label="ZIP code" inputMode="numeric" autoComplete="postal-code" value={values.zipCode ?? ""} onChange={optional("zipCode")} maxLength={10} error={errors.zipCode} />
+            <TextInput label="House no. / street" required autoComplete="address-line1" value={values.addressLine ?? ""} onChange={optional("addressLine")} maxLength={255} className="sm:col-span-2" error={errors.addressLine} />
+            <TextInput label="Barangay" required value={values.barangay ?? ""} onChange={optional("barangay")} maxLength={100} error={errors.barangay} />
+            <TextInput label="City / municipality" required autoComplete="address-level2" value={values.city ?? ""} onChange={optional("city")} maxLength={100} error={errors.city} />
+            <TextInput label="Province" required autoComplete="address-level1" value={values.province ?? ""} onChange={optional("province")} maxLength={100} error={errors.province} />
+            <TextInput label="ZIP code" required inputMode="numeric" autoComplete="postal-code" value={values.zipCode ?? ""} onChange={optional("zipCode")} maxLength={10} error={errors.zipCode} />
           </FormSection>
 
           <FormSection title="Parent / guardian">
-            <TextInput label="Full name" value={values.guardianName ?? ""} onChange={optional("guardianName")} maxLength={150} error={errors.guardianName} />
-            <TextInput label="Relationship" value={values.guardianRelationship ?? ""} onChange={optional("guardianRelationship")} maxLength={50} placeholder="e.g. Mother" error={errors.guardianRelationship} />
-            <TextInput label="Mobile number" type="tel" inputMode="tel" value={values.guardianContactNumber ?? ""} onChange={optional("guardianContactNumber")} error={errors.guardianContactNumber} />
+            <TextInput label="Full name" required value={values.guardianName ?? ""} onChange={optional("guardianName")} maxLength={150} error={errors.guardianName} />
+            <TextInput label="Relationship" required value={values.guardianRelationship ?? ""} onChange={optional("guardianRelationship")} maxLength={50} placeholder="e.g. Mother" error={errors.guardianRelationship} />
+            <TextInput label="Mobile number" type="tel" required inputMode="tel" value={values.guardianContactNumber ?? ""} onChange={optional("guardianContactNumber")} error={errors.guardianContactNumber} />
           </FormSection>
 
           {/* Anti-spam "honeypot": hidden from people, bots fill it in. Must stay empty. */}
@@ -254,7 +254,15 @@ function ApplicationForm({ options, onSubmitted }: { options: ApplicationFormOpt
 
           <div className="space-y-4 border-t border-border pt-6">
             <Checkbox
-              label="I agree to the data privacy notice"
+              label={
+                <>
+                  I agree to the data privacy notice
+                  <span className="ml-0.5 text-danger-600" aria-hidden="true">
+                    *
+                  </span>
+                </>
+              }
+              required
               description={
                 <>
                   Saint John Bosco will use this information only to process my application and enrollment, as explained in the{" "}
@@ -294,7 +302,7 @@ function ApplicationReceived({ receipt, documents }: { receipt: ApplicationRecei
         </p>
 
         <div className="mt-6 rounded-xl border border-gold-200 bg-gold-50 px-5 py-4">
-          <p className="text-xs font-semibold tracking-[0.2em] text-gold-700 uppercase">Your reference number</p>
+          <p className="text-sm font-medium text-gold-700">Your reference number</p>
           <p className="mt-1 font-display text-2xl font-semibold tracking-wide text-primary-900 tabular-nums">{receipt.referenceNumber}</p>
           <p className="mt-1 text-xs text-ink-muted">Write it down or keep the email — the Registrar will ask for it.</p>
         </div>

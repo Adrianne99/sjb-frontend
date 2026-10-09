@@ -1,7 +1,9 @@
 // Sidebar / menu items. Items with a `permission` only appear for users who
 // have it (the backend still checks every request).
 import {
+  BookOpen,
   CalendarDays,
+  CircleUserRound,
   ChartColumn,
   ClipboardList,
   FileCheck2,
@@ -39,6 +41,7 @@ export const ADMIN_NAV: NavGroup[] = [
   {
     items: [
       { label: "Dashboard", to: "/admin", icon: LayoutDashboard, end: true },
+      { label: "My Classes", to: "/admin/my-classes", icon: BookOpen, permission: "teaching:own" },
       { label: "Students", to: "/admin/students", icon: Users, permission: "students:read" },
       { label: "Applications", to: "/admin/applications", icon: Inbox, permission: "applications:read" },
       { label: "Requirements", to: "/admin/requirements", icon: FileCheck2, permission: "requirements:read" },
@@ -57,6 +60,10 @@ export const ADMIN_NAV: NavGroup[] = [
       { label: "Audit Logs", to: "/admin/audit-logs", icon: ScrollText, permission: "audit:read" },
       { label: "Settings", to: "/admin/settings", icon: Settings, permission: "settings:manage" },
     ],
+  },
+  {
+    title: "Account",
+    items: [{ label: "My Account", to: "/admin/account", icon: CircleUserRound, permission: "account:self" }],
   },
 ];
 

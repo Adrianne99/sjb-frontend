@@ -164,7 +164,7 @@ function EditPaymentForm({ payment, onCancel, onSaved }: { payment: Payment; onC
   return (
     <form onSubmit={handleSubmit} className="space-y-4 rounded-lg border border-primary-200 bg-primary-50/40 p-4" noValidate>
       <Alert tone="info">The amount cannot be changed. To fix an amount, void this payment and record it again.</Alert>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <TextInput label="Payment date" type="date" value={values.paymentDate} onChange={(event) => setValues({ ...values, paymentDate: event.target.value })} error={errors.paymentDate} />
         <Select label="Payment method" value={values.paymentMethod} onChange={(event) => setValues({ ...values, paymentMethod: event.target.value as PaymentMethod })} options={toOptions(PAYMENT_METHOD_LABELS)} />
         <TextInput label="Reference / OR number" value={values.referenceNumber} onChange={(event) => setValues({ ...values, referenceNumber: event.target.value })} error={errors.referenceNumber} />

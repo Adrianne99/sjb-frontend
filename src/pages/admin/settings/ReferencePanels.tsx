@@ -84,6 +84,8 @@ export function SectionsPanel() {
       toPayload={(values) => ({ name: text(values.name), academicYearId: Number(values.academicYearId), programId: Number(values.programId), yearLevel: Number(values.yearLevel) })}
       create={academicService.createSection}
       update={academicService.updateSection}
+      remove={academicService.deleteSection}
+      rowLabel={(row) => `${row.name} (${row.academicYearName})`}
     />
   );
 }

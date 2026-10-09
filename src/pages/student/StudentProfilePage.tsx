@@ -44,7 +44,7 @@ export default function StudentProfilePage() {
         }
       />
 
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title="Student information" icon={<GraduationCap className="size-5" aria-hidden="true" />} description="Managed by the Registrar's Office." />
           <CardBody>
@@ -163,7 +163,7 @@ function EditContactModal({ open, profile, onClose, onSaved }: { open: boolean; 
         </>
       }
     >
-      <form id="contact-form" onSubmit={handleSubmit} className="grid gap-4 sm:grid-cols-2" noValidate>
+      <form id="contact-form" onSubmit={handleSubmit} className="grid grid-cols-1 gap-4 sm:grid-cols-2" noValidate>
         {profile.editableFields.map((field: StudentProfileField) => (
           <TextInput
             key={field}

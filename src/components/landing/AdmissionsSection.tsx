@@ -1,48 +1,67 @@
-import { Reveal } from "@/components/ui/Reveal";
-import { ArrowRight } from "lucide-react";
+// "How to enroll": the five admission steps in a row (numbered badge, icon,
+// title, text, arrows in between — a list on phones), then the requirements
+// checklist and the "Apply online" call to action.
+// Steps come from src/config/school.ts (admissionSteps).
+import { BadgeCheck, ChevronRight, ClipboardCheck, FileText, MonitorSmartphone, Wallet, type LucideIcon } from "lucide-react";
 import { Link } from "react-router";
-import { ButtonLink } from "@/components/ui/Button";
 import { school } from "@/config/school";
 import { RequirementsList } from "./RequirementsList";
 import { SectionHeading } from "./SectionHeading";
 
+/** One icon per step, in the same order as `school.admissionSteps`. */
+const STEP_ICONS: LucideIcon[] = [MonitorSmartphone, FileText, ClipboardCheck, Wallet, BadgeCheck];
+
 export function AdmissionsSection() {
+  const steps = school.admissionSteps;
   return (
-    <section id="admissions" aria-labelledby="admissions-heading" className="bg-primary-900 py-20 sm:py-28">
+    <section id="admissions" aria-labelledby="admissions-heading" className="bg-surface py-20 sm:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="grid gap-6 lg:grid-cols-2 lg:items-end">
-          <SectionHeading id="admissions-heading" title="How to enroll" align="left" inverted />
-          <p className="text-base leading-relaxed text-primary-200 lg:max-w-md lg:justify-self-end">
-            Five steps for Senior High School and college applicants — start online, finish at the school.
-          </p>
+        <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
+          <SectionHeading
+            id="admissions-heading"
+            title="How to enroll"
+            description="Five steps for Senior High School and college applicants — start online, finish at the school."
+          />
+         
         </div>
 
-        {/* Timeline: a thin line with gold dots — across on desktop, down the side on phones. */}
-        <ol className="mt-14 grid md:grid-cols-5">
-          {school.admissionSteps.map((step, index) => (
-            <Reveal as="li" key={step.title} delay={index * 110} className="relative border-l border-white/20 pb-10 pl-7 last:pb-0 md:border-t md:border-l-0 md:pt-8 md:pr-6 md:pb-0 md:pl-0">
-              <span aria-hidden="true" className="absolute top-1 -left-1.25 size-2.5 rounded-full bg-gold-400 md:-top-1.25 md:left-0" />
-              <span className="font-display text-sm font-medium text-gold-300 tabular-nums" aria-hidden="true">
-                {String(index + 1).padStart(2, "0")}
-              </span>
-              <p className="mt-2 font-display text-xl font-light text-white">
-                <span className="sr-only">Step {index + 1}: </span>
-                {step.title}
-              </p>
-              <p className="mt-2 text-sm leading-relaxed text-primary-200">{step.description}</p>
-            </Reveal>
-          ))}
+        <ol className="mt-14 grid grid-cols-1 gap-8 md:grid-cols-5 md:gap-4">
+          {steps.map((step, index) => {
+            const Icon = STEP_ICONS[index % STEP_ICONS.length];
+            return (
+              <li key={step.title} className="relative flex gap-4 md:flex-col md:items-center md:text-center">
+                <div className="flex shrink-0 flex-col items-center gap-2">
+                  <span className="flex size-6 items-center justify-center rounded-full bg-gold-100 text-xs font-semibold text-gold-700 tabular-nums" aria-hidden="true">
+                    {index + 1}
+                  </span>
+                  <Icon className="size-9 text-primary-800" strokeWidth={1.4} aria-hidden="true" />
+                </div>
+                <div className="md:mt-2">
+                  <p className="font-display text-base font-semibold text-primary-900">
+                    <span className="sr-only">Step {index + 1}: </span>
+                    {step.title}
+                  </p>
+                  <p className="mt-1.5 text-sm leading-relaxed text-ink-muted">{step.description}</p>
+                </div>
+                {index < steps.length - 1 && (
+                  <ChevronRight aria-hidden="true" className="absolute top-9 -right-4 hidden size-5 text-primary-300 md:block" />
+                )}
+              </li>
+            );
+          })}
         </ol>
 
         <RequirementsList />
 
-        <div className="mt-16 flex flex-wrap items-center gap-x-8 gap-y-4 border-t border-white/15 pt-10">
-          <ButtonLink to="/apply" variant="gold" size="lg" className="rounded-full! px-7!" rightIcon={<ArrowRight className="size-4" aria-hidden="true" />}>
+        <div className="mt-12 flex flex-wrap items-center gap-x-8 gap-y-4">
+          <Link
+            to="/apply"
+            className="inline-flex h-12 items-center rounded-full bg-gold-400 px-7 text-sm font-semibold text-primary-950 transition-colors hover:bg-gold-300"
+          >
             Apply online
-          </ButtonLink>
-          <Link to="/#contact" className="group inline-flex items-center gap-2 text-sm font-medium tracking-[0.12em] text-white uppercase">
-            <span className="border-b border-white/40 pb-1 transition-colors group-hover:border-gold-300">Contact the Registrar&apos;s Office</span>
-            <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+          </Link>
+          <Link to="/#contact" className="text-sm font-semibold text-primary-900 underline decoration-primary-900/30 underline-offset-4 hover:decoration-primary-900">
+            Contact the Registrar&apos;s Office
           </Link>
         </div>
       </div>

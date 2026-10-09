@@ -21,6 +21,8 @@ export const academicService = {
     api.get<Section[]>("/academic/sections", filters),
   createSection: (body: Partial<Section>) => api.post<Section>("/academic/sections", body),
   updateSection: (id: number, body: Partial<Section>) => api.put<Section>(`/academic/sections/${id}`, body),
+  /** Only works while no students, schedules, grades or attendance use the section. */
+  deleteSection: (id: number) => api.delete<null>(`/academic/sections/${id}`),
 
   subjects: () => api.get<Subject[]>("/academic/subjects"),
   createSubject: (body: Partial<Subject>) => api.post<Subject>("/academic/subjects", body),

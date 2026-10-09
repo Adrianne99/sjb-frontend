@@ -24,9 +24,12 @@ import { useToast } from "@/hooks/useToast";
 import { announcementService, type AnnouncementInput } from "@/services/admin.service";
 import { apiUrl, getErrorMessage } from "@/services/api";
 import type { Announcement } from "@/types";
+import { cn } from "@/utils/cn";
 import { formatDateTime } from "@/utils/format";
 import { resizePhoto } from "@/utils/image";
-import { ANNOUNCEMENT_STATUS_LABELS, AUDIENCE_LABELS, toOptions } from "@/utils/labels";
+import { ANNOUNCEMENT_CATEGORY_LABELS, ANNOUNCEMENT_STATUS_LABELS, AUDIENCE_LABELS, toOptions } from "@/utils/labels";
+import { FilterBar } from "@/components/table/FilterBar";
+import { clearedFilters, countActiveFilters } from "@/utils/filters";
 
 /** ISO timestamp -> value for <input type="datetime-local"> (Philippine time). */
 function toLocalInput(iso: string | null | undefined) {
@@ -41,11 +44,14 @@ function fromLocalInput(value: string) {
   return value ? new Date(`${value}:00+08:00`).toISOString() : null;
 }
 
+/** Filters in the Filters panel (the search box is separate). */
+const FILTER_KEYS = ["category", "status", "audience"] as const;
+
 export default function AnnouncementsAdminPage() {
   useDocumentTitle("Announcements");
-  const [filters, setFilter] = useQueryState({ search: "", status: "", audience: "", page: "1" });
+  const [filters, setFilter, setFilters] = useQueryState({ search: "", status: "", audience: "", category: "", page: "1" });
   const [searchText, setSearchText] = useSearchBox(filters.search, (value) => setFilter("search", value));
-  const { data, loading, error, reload } = useApi(() => announcementService.list({ ...filters, pageSize: 20 }), [filters.search, filters.status, filters.audience, filters.page]);
+  const { data, loading, error, reload } = useApi(() => announcementService.list({ ...filters, pageSize: 20 }), [filters.search, filters.status, filters.audience, filters.category, filters.page]);
   const [editing, setEditing] = useState<Announcement | "new" | null>(null);
 
   return (
@@ -61,11 +67,17 @@ export default function AnnouncementsAdminPage() {
       />
 
       <Card>
-        <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-4">
-          <SearchInput value={searchText} onChange={setSearchText} label="Search announcements" placeholder="Search title or content..." className="sm:col-span-2" />
+        <FilterBar
+          search={
+            <SearchInput value={searchText} onChange={setSearchText} label="Search announcements" placeholder="Search title or content..." />
+          }
+          activeCount={countActiveFilters(filters, FILTER_KEYS)}
+          onClear={() => setFilters(clearedFilters(FILTER_KEYS))}
+        >
+          <Select label="Category" hideLabel placeholder="All categories" value={filters.category} onChange={(event) => setFilter("category", event.target.value)} options={toOptions(ANNOUNCEMENT_CATEGORY_LABELS)} />
           <Select label="Status" hideLabel placeholder="All statuses" value={filters.status} onChange={(event) => setFilter("status", event.target.value)} options={toOptions(ANNOUNCEMENT_STATUS_LABELS)} />
           <Select label="Audience" hideLabel placeholder="All audiences" value={filters.audience} onChange={(event) => setFilter("audience", event.target.value)} options={toOptions(AUDIENCE_LABELS)} />
-        </div>
+        </FilterBar>
         {error ? (
           <ErrorState message={error} onRetry={reload} />
         ) : (
@@ -88,6 +100,7 @@ export default function AnnouncementsAdminPage() {
                     </div>
                   ),
                 },
+                { header: "Category", cell: (row) => ANNOUNCEMENT_CATEGORY_LABELS[row.category], hideOnMobile: true },
                 { header: "Audience", cell: (row) => <Badge tone={row.audience === "PUBLIC" ? "info" : "gold"}>{AUDIENCE_LABELS[row.audience]}</Badge> },
                 {
                   header: "Status",
@@ -148,8 +161,21 @@ interface PhotoChoice {
 /**
  * Cover photo picker. The photo is shrunk in the browser (max 1600 px wide, JPEG)
  * and uploaded after the announcement is saved.
+ * `required`: shows the red * and hides "Remove" (the photo can only be changed).
  */
-function PhotoPicker({ currentPath, choice, onChange }: { currentPath: string | null | undefined; choice: PhotoChoice; onChange: (choice: PhotoChoice) => void }) {
+function PhotoPicker({
+  currentPath,
+  choice,
+  onChange,
+  required = false,
+  error,
+}: {
+  currentPath: string | null | undefined;
+  choice: PhotoChoice;
+  onChange: (choice: PhotoChoice) => void;
+  required?: boolean;
+  error?: string;
+}) {
   const toast = useToast();
   const inputRef = useRef<HTMLInputElement>(null);
   const [preparing, setPreparing] = useState(false);
@@ -179,10 +205,17 @@ function PhotoPicker({ currentPath, choice, onChange }: { currentPath: string | 
   }
 
   return (
-    <div>
-      <p className="mb-1.5 text-sm font-medium text-ink-soft">Cover photo</p>
+    <div id="announcement-photo-field" className="scroll-mt-4">
+      <p className="mb-1.5 text-sm font-medium text-ink-soft">
+        Cover photo
+        {required && (
+          <span className="ml-0.5 text-danger-600" aria-hidden="true">
+            *
+          </span>
+        )}
+      </p>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-        <div className="aspect-16/10 w-full overflow-hidden rounded-xl border border-border bg-surface-muted sm:w-56">
+        <div className={cn("aspect-16/10 w-full overflow-hidden rounded-xl border bg-surface-muted sm:w-56", error ? "border-danger-600" : "border-border")}>
           {shown ? (
             <img src={shown} alt="Selected cover photo" className="size-full object-cover" />
           ) : (
@@ -195,13 +228,18 @@ function PhotoPicker({ currentPath, choice, onChange }: { currentPath: string | 
             <Button variant="secondary" size="sm" loading={preparing} onClick={() => inputRef.current?.click()} leftIcon={<ImagePlus className="size-4" aria-hidden="true" />}>
               {shown ? "Change photo" : "Add photo"}
             </Button>
-            {shown && (
+            {shown && !required && (
               <Button variant="ghost" size="sm" onClick={() => onChange({ file: null, previewUrl: null, remove: true })} leftIcon={<Trash2 className="size-4" aria-hidden="true" />}>
                 Remove
               </Button>
             )}
           </div>
           <p className="text-xs text-ink-muted">JPG, PNG or WebP. Shown as a wide photo (cropped to fit) on the website and the announcement page.</p>
+          {error && (
+            <p role="alert" className="text-sm text-danger-700">
+              {error}
+            </p>
+          )}
         </div>
       </div>
     </div>
@@ -214,22 +252,32 @@ function AnnouncementForm({ announcement, onCancel, onSaved }: { announcement: A
     title: announcement?.title ?? "",
     content: announcement?.content ?? "",
     audience: announcement?.audience ?? "PUBLIC",
+    category: announcement?.category ?? "GENERAL",
     status: announcement?.status ?? "DRAFT",
     publishDate: toLocalInput(announcement?.publishDate ?? new Date().toISOString()),
     expirationDate: toLocalInput(announcement?.expirationDate),
   });
   const [saving, setSaving] = useState(false);
   const [photo, setPhoto] = useState<PhotoChoice>({ file: null, previewUrl: null, remove: false });
+  const [photoError, setPhotoError] = useState<string | undefined>();
   const { errors, setFromError } = useFormErrors();
   const set = (field: keyof typeof values) => (event: { target: { value: string } }) => setValues((current) => ({ ...current, [field]: event.target.value }));
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
+    // A cover photo is required: a new one, or the one the announcement already has.
+    const hasPhoto = Boolean(photo.file) || (!photo.remove && Boolean(announcement?.imagePath));
+    if (!hasPhoto) {
+      setPhotoError("Add a cover photo.");
+      document.getElementById("announcement-photo-field")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      return;
+    }
     setSaving(true);
     const input: AnnouncementInput = {
       title: values.title,
       content: values.content,
       audience: values.audience as AnnouncementInput["audience"],
+      category: values.category as AnnouncementInput["category"],
       status: values.status as AnnouncementInput["status"],
       publishDate: fromLocalInput(values.publishDate) ?? new Date().toISOString(),
       expirationDate: fromLocalInput(values.expirationDate),
@@ -251,9 +299,19 @@ function AnnouncementForm({ announcement, onCancel, onSaved }: { announcement: A
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
       <TextInput label="Title" required maxLength={200} value={values.title} onChange={set("title")} error={errors.title} />
-      <PhotoPicker currentPath={announcement?.imagePath} choice={photo} onChange={setPhoto} />
+      <PhotoPicker
+        required
+        currentPath={announcement?.imagePath}
+        choice={photo}
+        onChange={(choice) => {
+          setPhoto(choice);
+          setPhotoError(undefined);
+        }}
+        error={photoError}
+      />
       <Textarea label="Content" required rows={7} value={values.content} onChange={set("content")} error={errors.content} hint="Plain text. Line breaks are kept." />
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <Select label="Category" value={values.category} onChange={set("category")} options={toOptions(ANNOUNCEMENT_CATEGORY_LABELS)} error={errors.category} hint="Shown as a tag on the website." />
         <Select label="Audience" value={values.audience} onChange={set("audience")} options={toOptions(AUDIENCE_LABELS)} />
         <Select label="Status" value={values.status} onChange={set("status")} options={toOptions(ANNOUNCEMENT_STATUS_LABELS)} />
         <TextInput label="Publish date" type="datetime-local" required value={values.publishDate} onChange={set("publishDate")} error={errors.publishDate} />

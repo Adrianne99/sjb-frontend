@@ -10,6 +10,7 @@ import { Badge } from "@/components/badge/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import { LoadingState } from "@/components/ui/States";
 import { ADMIN_NAV } from "@/config/navigation";
+import { roleBadgeText, ROLE_TONES } from "@/config/roles";
 import { useAuth } from "@/hooks/useAuth";
 
 export function AdminLayout() {
@@ -37,7 +38,7 @@ export function AdminLayout() {
   );
 
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="min-h-dvh bg-background print:bg-white">
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-surface focus:px-3 focus:py-2">
         Skip to content
       </a>
@@ -47,7 +48,8 @@ export function AdminLayout() {
         {sidebar}
       </MobileDrawer>
 
-      <div className="lg:pl-64">
+      {/* print:pl-0 / print:p-0 — on paper there is no sidebar, so the page uses the full width. */}
+      <div className="lg:pl-64 print:pl-0">
         <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-border bg-surface/95 px-4 backdrop-blur sm:px-6 no-print">
           <button
             type="button"
@@ -81,8 +83,8 @@ export function AdminLayout() {
               <div className="hidden items-center gap-3 border-l border-border pl-3 sm:flex">
                 <div className="text-right leading-tight">
                   <p className="text-sm font-medium text-ink">{user.displayName}</p>
-                  <Badge tone={user.role === "ADMIN" ? "gold" : "info"} className="mt-0.5">
-                    {user.role === "ADMIN" ? "Administrator" : "Staff"}
+                  <Badge tone={ROLE_TONES[user.role]} className="mt-0.5">
+                    {roleBadgeText(user)}
                   </Badge>
                 </div>
                 <Avatar name={user.displayName} size="sm" />
@@ -91,7 +93,7 @@ export function AdminLayout() {
           </div>
         </header>
 
-        <main id="main" className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+        <main id="main" className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 print:max-w-none print:p-0">
           <Suspense fallback={<LoadingState label="Loading page..." />}>
             {/* Soft fade each time the page changes (key = the page address). */}
           <div key={pathname} className="animate-page-in">

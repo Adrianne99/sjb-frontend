@@ -1,9 +1,16 @@
 // Grade management:  Term -> Class (subject + section) -> Students -> Grades.
 // Grades are saved as DRAFT and only become visible to students when PUBLISHED.
+//
+// The same page is "My Classes" for teachers (<GradesPage teacher />): they only
+// get their own classes (from /api/teaching), save drafts and "Submit for review";
+// staff publish them or return them with a note. Teachers also take attendance.
+// Everyone can print the class list or download it as a spreadsheet.
 // Published grades (e.g. an INC that is later completed) are changed with the
 // Edit / Complete INC button — a reason is required and every change is logged.
-import { ArrowLeft, History, Lock, Pencil, Save, Send } from "lucide-react";
+import { ArrowLeft, Download, History, Lock, Pencil, Printer, Save, Send, Undo2, Upload } from "lucide-react";
 import { useState, type FormEvent } from "react";
+import { PrintableClassList } from "@/components/admin/ClassListExport";
+import { ReturnGradesModal, SubmissionBadge, SubmissionBanner } from "@/components/admin/GradeReview";
 import { StatusBadge } from "@/components/badge/StatusBadge";
 import { Card, CardHeader } from "@/components/card/Card";
 import { Select } from "@/components/form/Select";
@@ -16,6 +23,7 @@ import { Alert } from "@/components/ui/Alert";
 import { Badge } from "@/components/badge/Badge";
 import { Button, IconButton } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
+import { Tabs } from "@/components/ui/Tabs";
 import { ErrorState, LoadingState } from "@/components/ui/States";
 import { useApi } from "@/hooks/useApi";
 import { useAuth } from "@/hooks/useAuth";
@@ -25,25 +33,55 @@ import { useTerms } from "@/hooks/useLookups";
 import { useQueryState } from "@/hooks/useQueryState";
 import { useToast } from "@/hooks/useToast";
 import { ApiError, getErrorMessage } from "@/services/api";
-import { gradeService, type ClassSelector, type GradeEntry } from "@/services/grade.service";
+import { gradeService, type ClassSelector, type GradeEntry, type GradeSource } from "@/services/grade.service";
+import { teachingService } from "@/services/teaching.service";
 import type { ClassOffering, ClassRoster, Grade, GradeRemark } from "@/types";
+import { downloadClassCsv } from "@/utils/class-list";
 import { formatDateTime } from "@/utils/format";
+import { AttendancePanel } from "./teacher/AttendancePanel";
 
-export default function GradesPage() {
-  useDocumentTitle("Grades");
+export default function GradesPage({ teacher = false }: { teacher?: boolean }) {
+  useDocumentTitle(teacher ? "My Classes" : "Grades");
+  const source: GradeSource = teacher ? teachingService : gradeService;
   const { terms, currentTerm } = useTerms();
-  const [query, setQuery, setQueries] = useQueryState({ semesterId: "", sectionId: "", subjectId: "" });
+  const [query, setQuery, setQueries] = useQueryState({ semesterId: "", sectionId: "", subjectId: "", view: "" });
   const semesterId = Number(query.semesterId || currentTerm?.id || 0);
 
   const selector: ClassSelector | null = query.sectionId && query.subjectId && semesterId ? { semesterId, sectionId: Number(query.sectionId), subjectId: Number(query.subjectId) } : null;
 
   return (
     <>
-      <PageHeader title="Grades" description="Encode grades as drafts, review them, then publish. Students only see published grades." />
+      <div className="no-print">
+        {teacher ? (
+          <PageHeader title="My Classes" description="Enter grades and save them as drafts, then submit them for review. You can also take attendance." />
+        ) : (
+          <PageHeader title="Grades" description="Encode grades as drafts, review them, then publish. Students only see published grades." />
+        )}
+      </div>
       {selector ? (
-        <GradeSheet selector={selector} onBack={() => setQueries({ sectionId: "", subjectId: "" })} />
+        <>
+          {teacher && (
+            <div className="no-print">
+              <Tabs<"grades" | "attendance">
+                label="Class sections"
+                value={query.view === "attendance" ? "attendance" : "grades"}
+                onChange={(id) => setQuery("view", id === "grades" ? "" : id)}
+                tabs={[
+                  { id: "grades", label: "Grades" },
+                  { id: "attendance", label: "Attendance" },
+                ]}
+              />
+            </div>
+          )}
+          {teacher && query.view === "attendance" ? (
+            <AttendancePanel selector={selector} onBack={() => setQueries({ sectionId: "", subjectId: "", view: "" })} />
+          ) : (
+            <GradeSheet source={source} selector={selector} onBack={() => setQueries({ sectionId: "", subjectId: "", view: "" })} />
+          )}
+        </>
       ) : (
         <ClassPicker
+          source={source}
           semesterId={semesterId}
           terms={terms.map((term) => ({ value: String(term.id), label: term.label }))}
           onTermChange={(id) => setQuery("semesterId", id)}
@@ -58,8 +96,8 @@ export default function GradesPage() {
 
 // --- Step 1: choose a class ----------------------------------------------------
 
-function ClassPicker({ semesterId, terms, onTermChange, onPick }: { semesterId: number; terms: Array<{ value: string; label: string }>; onTermChange: (id: string) => void; onPick: (offering: ClassOffering) => void }) {
-  const { data, loading, error, reload } = useApi(() => (semesterId ? gradeService.classes(semesterId) : Promise.resolve([])), [semesterId]);
+function ClassPicker({ source, semesterId, terms, onTermChange, onPick }: { source: GradeSource; semesterId: number; terms: Array<{ value: string; label: string }>; onTermChange: (id: string) => void; onPick: (offering: ClassOffering) => void }) {
+  const { data, loading, error, reload } = useApi(() => (semesterId ? source.classes(semesterId) : Promise.resolve([])), [semesterId]);
   const [section, setSection] = useState("");
   const sections = [...new Map((data ?? []).map((offering) => [offering.section.id, offering.section])).values()];
   const rows = (data ?? []).filter((offering) => !section || String(offering.section.id) === section);
@@ -67,7 +105,7 @@ function ClassPicker({ semesterId, terms, onTermChange, onPick }: { semesterId: 
   return (
     <Card>
       <CardHeader title="Select a class" description="Classes come from the schedules of the selected term." />
-      <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-3 border-b border-border p-4 sm:grid-cols-3">
         <Select label="Term" value={String(semesterId || "")} onChange={(event) => onTermChange(event.target.value)} options={terms} />
         <Select label="Section" placeholder="All sections" value={section} onChange={(event) => setSection(event.target.value)} options={sections.map((item) => ({ value: String(item.id), label: item.name }))} />
       </div>
@@ -115,6 +153,7 @@ function ClassPicker({ semesterId, terms, onTermChange, onPick }: { semesterId: 
                 </div>
               ),
             },
+            { header: "Review", cell: (row) => <SubmissionBadge submission={row.submission} />, hideOnMobile: true },
             {
               header: "Actions",
               align: "right",
@@ -138,8 +177,8 @@ function ClassPicker({ semesterId, terms, onTermChange, onPick }: { semesterId: 
 
 type RowState = { grade: string; remark: "" | "INCOMPLETE" | "DROPPED" };
 
-function GradeSheet({ selector, onBack }: { selector: ClassSelector; onBack: () => void }) {
-  const { data, loading, error, reload, setData } = useApi(() => gradeService.roster(selector), [selector.semesterId, selector.sectionId, selector.subjectId]);
+function GradeSheet({ source, selector, onBack }: { source: GradeSource; selector: ClassSelector; onBack: () => void }) {
+  const { data, loading, error, reload, setData } = useApi(() => source.roster(selector), [selector.semesterId, selector.sectionId, selector.subjectId]);
   // A new key re-initialises the editor whenever fresh data arrives from the server.
   const [version, setVersion] = useState(0);
 
@@ -149,6 +188,7 @@ function GradeSheet({ selector, onBack }: { selector: ClassSelector; onBack: () 
   return (
     <GradeSheetEditor
       key={version}
+      source={source}
       roster={data}
       selector={selector}
       onBack={onBack}
@@ -176,7 +216,7 @@ function initialRows(roster: ClassRoster): Record<number, RowState> {
   );
 }
 
-function GradeSheetEditor({ roster, selector, onBack, onRosterChange, onReload }: { roster: ClassRoster; selector: ClassSelector; onBack: () => void; onRosterChange: (roster: ClassRoster) => void; onReload: () => void }) {
+function GradeSheetEditor({ source, roster, selector, onBack, onRosterChange, onReload }: { source: GradeSource; roster: ClassRoster; selector: ClassSelector; onBack: () => void; onRosterChange: (roster: ClassRoster) => void; onReload: () => void }) {
   const { can } = useAuth();
   const toast = useToast();
   const [rows, setRows] = useState<Record<number, RowState>>(() => initialRows(roster));
@@ -186,13 +226,22 @@ function GradeSheetEditor({ roster, selector, onBack, onRosterChange, onReload }
   const [editing, setEditing] = useState<Grade | null>(null);
   const [historyFor, setHistoryFor] = useState<Grade | null>(null);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitOpen, setSubmitOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [returnOpen, setReturnOpen] = useState(false);
 
   const config = roster.gradingConfig;
   const step = config.decimalPlaces === 0 ? 1 : 0.25;
   const initial = initialRows(roster);
   const dirty = roster.students.some((row) => JSON.stringify(rows[row.enrollmentId]) !== JSON.stringify(initial[row.enrollmentId]));
   const draftCount = roster.students.filter((row) => row.grade?.status === "DRAFT").length;
-  const canWrite = can("grades:write");
+  const isTeacher = can("teaching:own");
+  const submission = roster.submission;
+  // A teacher's submitted sheet is locked until staff publish it or return it.
+  const lockedForReview = isTeacher && submission?.status === "SUBMITTED";
+  // Staff encode with "grades:write"; teachers encode drafts for their own classes.
+  const canWrite = (can("grades:write") || isTeacher) && !lockedForReview;
+  const missingGrades = roster.students.filter((row) => !row.grade).length;
 
   const update = (enrollmentId: number, change: Partial<RowState>) => setRows((current) => ({ ...current, [enrollmentId]: { ...current[enrollmentId], ...change } }));
 
@@ -215,7 +264,7 @@ function GradeSheetEditor({ roster, selector, onBack, onRosterChange, onReload }
     setSaving(true);
     setErrors({});
     try {
-      const response = await gradeService.saveClass(selector, entries);
+      const response = await source.saveClass(selector, entries);
       toast.success("Draft grades saved", response.message);
       onRosterChange(response.data.roster);
     } catch (saveError) {
@@ -236,6 +285,24 @@ function GradeSheetEditor({ roster, selector, onBack, onRosterChange, onReload }
     }
   }
 
+  async function submitForReview() {
+    setSubmitting(true);
+    try {
+      const response = await teachingService.submit(selector);
+      toast.success("Submitted for review", response.message);
+      setSubmitOpen(false);
+      onReload();
+    } catch (submitError) {
+      toast.error("Could not submit", getErrorMessage(submitError));
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  function printSheet() {
+    window.print();
+  }
+
   async function publish() {
     setPublishing(true);
     try {
@@ -252,34 +319,56 @@ function GradeSheetEditor({ roster, selector, onBack, onRosterChange, onReload }
 
   return (
     <>
-      <Button variant="ghost" size="sm" onClick={onBack} leftIcon={<ArrowLeft className="size-4" aria-hidden="true" />} className="mb-3">
+      <Button variant="ghost" size="sm" onClick={onBack} leftIcon={<ArrowLeft className="size-4" aria-hidden="true" />} className="no-print mb-3">
         All classes
       </Button>
 
-      <Card>
+      <Card className="no-print">
         <CardHeader
           title={`${roster.class.subject.code} · ${roster.class.subject.name}`}
           description={`${roster.class.section.name} · ${roster.class.instructor.fullName} · ${roster.class.termLabel} · ${roster.class.subject.units} units`}
           actions={
-            canWrite && (
-              <>
+            <>
+              <Button variant="ghost" onClick={printSheet} leftIcon={<Printer className="size-4" aria-hidden="true" />}>
+                Print
+              </Button>
+              <Button variant="ghost" onClick={() => downloadClassCsv(roster)} leftIcon={<Download className="size-4" aria-hidden="true" />}>
+                Download CSV
+              </Button>
+              {canWrite && (
                 <Button variant="secondary" onClick={save} loading={saving} disabled={!dirty} leftIcon={<Save className="size-4" aria-hidden="true" />}>
                   Save drafts
                 </Button>
-                {can("grades:publish") && (
-                  <Button onClick={() => setPublishOpen(true)} disabled={dirty || draftCount === 0} leftIcon={<Send className="size-4" aria-hidden="true" />}>
-                    Publish {draftCount > 0 ? `(${draftCount})` : ""}
-                  </Button>
-                )}
-              </>
-            )
+              )}
+              {canWrite && isTeacher && (
+                <Button onClick={() => setSubmitOpen(true)} disabled={dirty || draftCount === 0 || missingGrades > 0} leftIcon={<Upload className="size-4" aria-hidden="true" />}>
+                  Submit for review
+                </Button>
+              )}
+              {can("grades:publish") && submission?.status === "SUBMITTED" && (
+                <Button variant="secondary" onClick={() => setReturnOpen(true)} leftIcon={<Undo2 className="size-4" aria-hidden="true" />}>
+                  Return to teacher
+                </Button>
+              )}
+              {canWrite && can("grades:publish") && (
+                <Button onClick={() => setPublishOpen(true)} disabled={dirty || draftCount === 0} leftIcon={<Send className="size-4" aria-hidden="true" />}>
+                  Publish {draftCount > 0 ? `(${draftCount})` : ""}
+                </Button>
+              )}
+            </>
           }
         />
         <div className="space-y-2 border-b border-border px-5 py-3 text-sm text-ink-muted">
           <p>
             Grading scale: <strong className="text-ink">{config.scaleLabel}</strong> · Passing: {config.passingGrade} · Remarks (Passed/Failed) are computed by the system when you save.
           </p>
-          {dirty && <p className="font-medium text-warning-700">You have unsaved changes. Save them before publishing.</p>}
+          {dirty && <p className="font-medium text-warning-700">You have unsaved changes. Save them before {isTeacher ? "submitting" : "publishing"}.</p>}
+          {isTeacher && canWrite && !dirty && missingGrades > 0 && (
+            <p>
+              {missingGrades} student(s) have no grade yet. Every student needs a grade (or INC / Dropped) before you can submit for review.
+            </p>
+          )}
+          <SubmissionBanner submission={submission} teacher={isTeacher} />
         </div>
 
         <DataTable
@@ -373,7 +462,7 @@ function GradeSheetEditor({ roster, selector, onBack, onRosterChange, onReload }
                     ) : (
                       <Lock className="size-3.5 text-ink-muted" aria-label="Locked — you cannot change published grades" />
                     ))}
-                  {row.grade && (
+                  {row.grade && can("grades:read") && (
                     <IconButton label={`Change history of ${row.student.fullName}'s grade`} size="sm" onClick={() => setHistoryFor(row.grade)}>
                       <History className="size-4" aria-hidden="true" />
                     </IconButton>
@@ -384,6 +473,27 @@ function GradeSheetEditor({ roster, selector, onBack, onRosterChange, onReload }
           ]}
         />
       </Card>
+
+      <PrintableClassList roster={roster} />
+
+      <ConfirmDialog
+        open={submitOpen}
+        title="Submit these grades for review?"
+        description="The Registrar's Office will check and publish them. You can't change them unless they are returned to you."
+        confirmLabel="Submit for review"
+        loading={submitting}
+        onCancel={() => setSubmitOpen(false)}
+        onConfirm={submitForReview}
+      />
+      <ReturnGradesModal
+        open={returnOpen}
+        selector={selector}
+        onClose={() => setReturnOpen(false)}
+        onReturned={() => {
+          setReturnOpen(false);
+          onReload();
+        }}
+      />
 
       <ConfirmDialog
         open={publishOpen}

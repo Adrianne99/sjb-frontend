@@ -23,6 +23,11 @@ import type { Schedule } from "@/types";
 import { cn } from "@/utils/cn";
 import { classLocation, formatTimeRange } from "@/utils/format";
 import { DAY_LABELS } from "@/utils/labels";
+import { FilterBar } from "@/components/table/FilterBar";
+import { clearedFilters, countActiveFilters } from "@/utils/filters";
+
+/** Filters in the Filters panel (the search box is separate). */
+const FILTER_KEYS = ["sectionId", "instructorId", "roomId"] as const;
 
 export default function SchedulesPage() {
   useDocumentTitle("Schedules");
@@ -31,7 +36,7 @@ export default function SchedulesPage() {
   const { terms, currentTerm } = useTerms();
   const instructors = useInstructors();
   const rooms = useRooms();
-  const [filters, setFilter] = useQueryState({ semesterId: "", sectionId: "", instructorId: "", roomId: "", view: "list" });
+  const [filters, setFilter, setFilters] = useQueryState({ semesterId: "", sectionId: "", instructorId: "", roomId: "", view: "list" });
   const semesterId = filters.semesterId || String(currentTerm?.id ?? "");
   const term = terms.find((item) => String(item.id) === semesterId);
   const sections = useSections(term?.academicYearId);
@@ -78,31 +83,39 @@ export default function SchedulesPage() {
       />
 
       <Card>
-        <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-2 lg:grid-cols-5">
-          <Select label="Term" hideLabel value={semesterId} onChange={(event) => setFilter("semesterId", event.target.value)} options={terms.map((item) => ({ value: String(item.id), label: item.label }))} />
+        <FilterBar
+          search={
+            <Select label="Term" hideLabel value={semesterId} onChange={(event) => setFilter("semesterId", event.target.value)} options={terms.map((item) => ({ value: String(item.id), label: item.label }))} />
+          }
+          extra={
+            <div role="group" aria-label="View" className="inline-flex h-10 rounded-md border border-border-strong bg-surface p-0.5">
+              {(
+                [
+                  { id: "list", label: "List", icon: List },
+                  { id: "week", label: "Weekly", icon: LayoutGrid },
+                ] as const
+              ).map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() => setFilter("view", option.id === "list" ? "" : option.id)}
+                  aria-pressed={filters.view === option.id}
+                  aria-label={option.label}
+                  className={cn("inline-flex flex-1 items-center justify-center gap-1.5 rounded px-3 text-sm font-medium", filters.view === option.id ? "bg-primary-900 text-white" : "text-ink-soft hover:bg-surface-muted")}
+                >
+                  <option.icon className="size-4" aria-hidden="true" />
+                  <span className="hidden sm:inline">{option.label}</span>
+                </button>
+              ))}
+            </div>
+          }
+          activeCount={countActiveFilters(filters, FILTER_KEYS)}
+          onClear={() => setFilters(clearedFilters(FILTER_KEYS))}
+        >
           <Select label="Section" hideLabel placeholder="All sections" value={filters.sectionId} onChange={(event) => setFilter("sectionId", event.target.value)} options={(sections.data ?? []).map((section) => ({ value: String(section.id), label: section.name }))} />
           <Select label="Instructor" hideLabel placeholder="All instructors" value={filters.instructorId} onChange={(event) => setFilter("instructorId", event.target.value)} options={(instructors.data ?? []).map((instructor) => ({ value: String(instructor.id), label: `${instructor.lastName}, ${instructor.firstName}` }))} />
           <Select label="Room" hideLabel placeholder="All rooms" value={filters.roomId} onChange={(event) => setFilter("roomId", event.target.value)} options={(rooms.data ?? []).map((room) => ({ value: String(room.id), label: room.code }))} />
-          <div role="group" aria-label="View" className="inline-flex h-10 rounded-md border border-border-strong bg-surface p-0.5">
-            {(
-              [
-                { id: "list", label: "List", icon: List },
-                { id: "week", label: "Weekly", icon: LayoutGrid },
-              ] as const
-            ).map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => setFilter("view", option.id === "list" ? "" : option.id)}
-                aria-pressed={filters.view === option.id}
-                className={cn("inline-flex flex-1 items-center justify-center gap-1.5 rounded px-3 text-sm font-medium", filters.view === option.id ? "bg-primary-900 text-white" : "text-ink-soft hover:bg-surface-muted")}
-              >
-                <option.icon className="size-4" aria-hidden="true" />
-                {option.label}
-              </button>
-            ))}
-          </div>
-        </div>
+        </FilterBar>
 
         {error ? (
           <ErrorState message={error} onRetry={reload} />

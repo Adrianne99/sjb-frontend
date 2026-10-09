@@ -3,8 +3,7 @@
 // Home page:            the newest post large, the next ones as small rows beside it.
 // Announcements page:   every post as a grid of photo tiles (`layout="grid"`).
 // Clicking a post opens it in full at /announcements/:id.
-import { Reveal } from "@/components/ui/Reveal";
-import { ArrowRight, Megaphone } from "lucide-react";
+import { Megaphone } from "lucide-react";
 import { Link } from "react-router";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { EmptyState } from "@/components/ui/States";
@@ -28,15 +27,14 @@ export function AnnouncementsSection({ limit = 4, showAllLink = true, layout = "
   const [newest, ...rest] = items;
 
   return (
-    <section id="announcements" aria-labelledby="announcements-heading" className="bg-surface py-20 sm:py-28">
+    <section id="announcements" aria-labelledby="announcements-heading" className="bg-background py-20 sm:py-24">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {showHeading && (
           <div className="flex flex-col items-start justify-between gap-6 sm:flex-row sm:items-end">
-            <SectionHeading id="announcements-heading" title="Announcements" align="left" />
+            <SectionHeading id="announcements-heading" title="Announcements" />
             {showAllLink && items.length > 0 && (
-              <Link to="/announcements" className="group inline-flex items-center gap-2 text-sm font-medium tracking-[0.12em] text-primary-900 uppercase">
-                <span className="border-b border-primary-900/30 pb-1 transition-colors group-hover:border-gold-500">Show all announcements</span>
-                <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
+              <Link to="/announcements" className="text-sm font-semibold text-primary-900 underline decoration-primary-900/30 underline-offset-4 hover:decoration-primary-900">
+                Show all announcements
               </Link>
             )}
           </div>
@@ -57,24 +55,24 @@ export function AnnouncementsSection({ limit = 4, showAllLink = true, layout = "
               <EmptyState icon={Megaphone} title="No announcements available." description={error ? "Announcements could not be loaded right now. Please check back later." : "New school announcements will appear here."} />
             </div>
           ) : layout === "grid" ? (
-            <ul className="grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
-              {items.map((announcement, index) => (
-                <Reveal as="li" key={announcement.id} delay={(index % 3) * 110}>
+            <ul className="grid grid-cols-1 gap-x-8 gap-y-14 sm:grid-cols-2 lg:grid-cols-3">
+              {items.map((announcement) => (
+                <li key={announcement.id}>
                   <AnnouncementTile announcement={announcement} />
-                </Reveal>
+                </li>
               ))}
             </ul>
           ) : (
-            <div className="grid gap-10 lg:grid-cols-[1.3fr_1fr] lg:gap-14">
-              <Reveal>
+            <div className="grid gap-8 lg:grid-cols-[1.15fr_1fr] lg:gap-10">
+              <div>
                 <AnnouncementFeature announcement={newest} />
-              </Reveal>
+              </div>
               {rest.length > 0 && (
-                <ul className="divide-y divide-border border-y border-border lg:self-start">
-                  {rest.map((announcement, index) => (
-                    <Reveal as="li" key={announcement.id} delay={(index + 1) * 110}>
+                <ul className="space-y-4 lg:self-start">
+                  {rest.map((announcement) => (
+                    <li key={announcement.id}>
                       <AnnouncementRow announcement={announcement} />
-                    </Reveal>
+                    </li>
                   ))}
                 </ul>
               )}

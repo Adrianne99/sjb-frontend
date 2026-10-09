@@ -25,13 +25,18 @@ import type { Payment } from "@/types";
 import { cn } from "@/utils/cn";
 import { formatDate, formatMoney } from "@/utils/format";
 import { PAYMENT_METHOD_LABELS, PAYMENT_STATUS_LABELS, toOptions } from "@/utils/labels";
+import { FilterBar } from "@/components/table/FilterBar";
+import { clearedFilters, countActiveFilters } from "@/utils/filters";
+
+/** Filters in the Filters panel (the search box is separate). */
+const FILTER_KEYS = ["academicYearId", "semesterId", "status", "paymentMethod", "dateFrom", "dateTo"] as const;
 
 export default function PaymentsPage() {
   useDocumentTitle("Payments");
   const { can } = useAuth();
   const { terms } = useTerms();
   const years = useAcademicYears();
-  const [filters, setFilter] = useQueryState({ search: "", academicYearId: "", semesterId: "", status: "", paymentMethod: "", dateFrom: "", dateTo: "", page: "1" });
+  const [filters, setFilter, setFilters] = useQueryState({ search: "", academicYearId: "", semesterId: "", status: "", paymentMethod: "", dateFrom: "", dateTo: "", page: "1" });
   const [searchText, setSearchText] = useSearchBox(filters.search, (value) => setFilter("search", value));
   const [recording, setRecording] = useState(false);
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -57,15 +62,20 @@ export default function PaymentsPage() {
       />
 
       <Card>
-        <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-2 lg:grid-cols-4">
-          <SearchInput value={searchText} onChange={setSearchText} label="Search payments" placeholder="Reference no., student ID or name..." className="sm:col-span-2" />
+        <FilterBar
+          search={
+            <SearchInput value={searchText} onChange={setSearchText} label="Search payments" placeholder="Reference no., student ID or name..." />
+          }
+          activeCount={countActiveFilters(filters, FILTER_KEYS)}
+          onClear={() => setFilters(clearedFilters(FILTER_KEYS))}
+        >
           <Select label="Academic year" hideLabel placeholder="All academic years" value={filters.academicYearId} onChange={(event) => setFilter("academicYearId", event.target.value)} options={(years.data ?? []).map((year) => ({ value: String(year.id), label: year.name }))} />
           <Select label="Term" hideLabel placeholder="All terms" value={filters.semesterId} onChange={(event) => setFilter("semesterId", event.target.value)} options={terms.map((term) => ({ value: String(term.id), label: term.label }))} />
           <Select label="Status" hideLabel placeholder="All statuses" value={filters.status} onChange={(event) => setFilter("status", event.target.value)} options={toOptions(PAYMENT_STATUS_LABELS)} />
           <Select label="Method" hideLabel placeholder="All methods" value={filters.paymentMethod} onChange={(event) => setFilter("paymentMethod", event.target.value)} options={toOptions(PAYMENT_METHOD_LABELS)} />
           <TextInput label="From date" hideLabel type="date" value={filters.dateFrom} onChange={(event) => setFilter("dateFrom", event.target.value)} />
           <TextInput label="To date" hideLabel type="date" value={filters.dateTo} onChange={(event) => setFilter("dateTo", event.target.value)} />
-        </div>
+        </FilterBar>
 
         {summary && (
           <p className="flex flex-wrap items-center gap-x-6 gap-y-1 border-b border-border bg-surface-muted/50 px-5 py-3 text-sm text-ink-muted">

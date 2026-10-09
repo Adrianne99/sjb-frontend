@@ -135,7 +135,7 @@ function GradingForm({ initial, level, hasOwnScale, onSaved }: { initial: Gradin
             ))}
           </div>
           <TextInput label="Scale description" required value={values.scaleLabel} onChange={(event) => setValues({ ...values, scaleLabel: event.target.value })} error={errors.scaleLabel} hint="Shown on report cards." />
-          <div className="grid gap-4 sm:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-4">
             <TextInput label="Lowest grade" type="number" step="any" value={values.minGrade} onChange={(event) => setValues({ ...values, minGrade: event.target.value })} error={errors.minGrade} />
             <TextInput label="Highest grade" type="number" step="any" value={values.maxGrade} onChange={(event) => setValues({ ...values, maxGrade: event.target.value })} error={errors.maxGrade} />
             <TextInput label="Passing grade" type="number" step="any" value={values.passingGrade} onChange={(event) => setValues({ ...values, passingGrade: event.target.value })} error={errors.passingGrade} />
@@ -195,7 +195,7 @@ function ProfileFieldsForm({ initial }: { initial: StudentProfileField[] }) {
     <Card>
       <CardHeader title="Student-editable profile fields" description="Choose which contact details students may update themselves in the portal. Names, birthdate and academic information are always read-only." />
       <CardBody className="space-y-5">
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           {fields.map((field) => (
             <Checkbox
               key={field}

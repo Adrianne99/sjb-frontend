@@ -66,7 +66,7 @@ function Section({ title, description, children }: { title: string; description?
     <Card>
       <CardHeader title={title} description={description} />
       <CardBody>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">{children}</div>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">{children}</div>
       </CardBody>
     </Card>
   );
@@ -237,7 +237,7 @@ function StudentForm({ student }: { student?: StudentDetail }) {
             <CardBody className="space-y-5">
               <Checkbox label="Enroll this student in a term now" checked={enrollNow} onChange={(event) => setEnrollNow(event.target.checked)} />
               {enrollNow && (
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                   <Select
                     label="Term"
                     value={semesterId}

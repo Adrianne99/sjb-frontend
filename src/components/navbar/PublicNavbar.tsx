@@ -46,7 +46,7 @@ export function PublicNavbar() {
   return (
     <header className="absolute inset-x-0 top-0 z-40">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-20 items-center justify-between gap-6 border-b border-white/15">
+        <div className="flex h-20 items-center justify-between gap-6 border-b border-white/10">
           <Logo size="sm" inverted className="min-w-0" />
 
           <nav aria-label="Main" className="hidden lg:block">
@@ -57,8 +57,8 @@ export function PublicNavbar() {
                     to={item.to}
                     aria-current={isActive(item) ? "location" : undefined}
                     className={cn(
-                      "relative py-2 text-[0.7rem] font-medium tracking-[0.14em] uppercase transition-colors",
-                      "after:absolute after:inset-x-0 after:-bottom-px after:h-px after:origin-left after:bg-gold-300 after:transition-transform after:duration-300",
+                      "relative py-2 text-sm font-medium transition-colors",
+                      "after:absolute after:inset-x-0 after:-bottom-0.5 after:h-0.5 after:origin-left after:rounded-full after:bg-gold-400 after:transition-transform after:duration-300",
                       isActive(item) ? "text-white after:scale-x-100" : "text-white/70 after:scale-x-0 hover:text-white hover:after:scale-x-100",
                     )}
                   >
@@ -73,10 +73,10 @@ export function PublicNavbar() {
             {/* Login is always visible — on phones it sits right beside the menu button. */}
             <Link
               to={portalLink.to}
-              className="group inline-flex items-center gap-1.5 rounded-full border border-white/40 px-3.5 py-2 text-[0.7rem] font-medium tracking-[0.12em] text-white uppercase transition-colors hover:border-white hover:bg-white hover:text-primary-950 sm:h-10 sm:gap-2 sm:px-5 sm:text-[0.8rem] sm:tracking-[0.14em]"
+              className="group inline-flex items-center gap-1.5 rounded-full bg-gold-400 px-4 py-2 text-xs font-semibold text-primary-950 transition-colors hover:bg-gold-300 sm:h-10 sm:gap-2 sm:px-5 sm:text-sm"
             >
               {portalLink.label}
-              <ArrowRight className="size-3.5 transition-transform group-hover:translate-x-0.5 sm:size-4" aria-hidden="true" />
+              <ArrowRight className="size-3.5 sm:size-4" aria-hidden="true" />
             </Link>
             <button
               type="button"
@@ -95,7 +95,7 @@ export function PublicNavbar() {
           <nav
             id="mobile-menu"
             aria-label="Mobile"
-            className="mt-2 animate-slide-up rounded-2xl border border-white/10 bg-primary-950/95 p-3 shadow-lg backdrop-blur lg:hidden"
+            className="mt-2 rounded-2xl border border-white/10 bg-primary-950 p-3 lg:hidden"
           >
             <ul>
               {PUBLIC_NAV.map((item) => (
@@ -104,7 +104,7 @@ export function PublicNavbar() {
                     to={item.to}
                     aria-current={isActive(item) ? "location" : undefined}
                     className={cn(
-                      "block rounded-lg px-4 py-3 text-sm font-medium tracking-[0.14em] uppercase",
+                      "block rounded-lg px-4 py-3 text-base font-medium",
                       isActive(item) ? "text-gold-300" : "text-white/80 hover:bg-white/5 hover:text-white",
                     )}
                   >

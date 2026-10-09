@@ -7,12 +7,15 @@ import type { Enrollment, StudentSummary } from "./students";
 // --- Announcements -------------------------------------------------------------
 export type AnnouncementStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 export type AnnouncementAudience = "PUBLIC" | "STUDENTS";
+/** The tag shown on the website, e.g. "EVENT". */
+export type AnnouncementCategory = "GENERAL" | "ACADEMIC" | "EVENT" | "ANNOUNCEMENT";
 
 export interface Announcement {
   id: number;
   title: string;
   content: string;
   audience: AnnouncementAudience;
+  category: AnnouncementCategory;
   status?: AnnouncementStatus;
   publishDate: string;
   expirationDate: string | null;
@@ -38,14 +41,15 @@ export interface AuditLog {
 }
 
 // --- Dashboard & reports --------------------------------------------------------
+/** Parts the user's role may not see are null (stats) or empty lists. */
 export interface DashboardData {
   currentTerm: { id: number; label: string } | null;
   stats: {
-    totalStudents: number;
-    currentlyEnrolled: number;
-    pendingEnrollment: number;
-    studentsWithBalance: number;
-    outstandingTotal: string;
+    totalStudents: number | null;
+    currentlyEnrolled: number | null;
+    pendingEnrollment: number | null;
+    studentsWithBalance: number | null;
+    outstandingTotal: string | null;
   };
   enrollmentByYearLevel: Array<{ yearLevel: number; count: number }>;
   collectionsByMonth: Array<{ month: string; total: string }>;
@@ -97,4 +101,22 @@ export interface ChatbotReply {
   category: "faq" | "privacy" | "greeting" | "fallback" | "ai" | "out_of_scope";
   topic?: string;
   suggestions: string[];
+}
+
+/** SJB Assistant chat session (the token itself stays in an HttpOnly cookie). */
+export interface ChatSessionInfo {
+  sessionId: string;
+  createdAt: string;
+  expiresAt: string;
+  authenticated: boolean;
+  /** Sent back in the X-Chat-CSRF-Token header. Kept in memory only. */
+  csrfToken: string;
+}
+
+/** One earlier message of the current chat (GET /chatbot/messages). */
+export interface ChatHistoryMessage {
+  id: number;
+  role: "user" | "assistant";
+  content: string;
+  createdAt: string;
 }

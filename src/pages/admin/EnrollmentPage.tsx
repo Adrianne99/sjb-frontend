@@ -23,13 +23,18 @@ import { enrollmentService } from "@/services/enrollment.service";
 import type { Enrollment } from "@/types";
 import { formatDate, formatMoney, formatYearLevel } from "@/utils/format";
 import { allYearLevelOptions, ENROLLMENT_STATUS_LABELS, toOptions } from "@/utils/labels";
+import { FilterBar } from "@/components/table/FilterBar";
+import { clearedFilters, countActiveFilters } from "@/utils/filters";
+
+/** Filters in the Filters panel (the search box is separate). */
+const FILTER_KEYS = ["semesterId", "status", "programId", "yearLevel", "sectionId"] as const;
 
 export default function EnrollmentPage() {
   useDocumentTitle("Enrollment");
   const { can } = useAuth();
   const { terms, currentTerm } = useTerms();
   const programs = usePrograms();
-  const [filters, setFilter] = useQueryState({ semesterId: "", search: "", programId: "", yearLevel: "", sectionId: "", status: "", page: "1" });
+  const [filters, setFilter, setFilters] = useQueryState({ semesterId: "", search: "", programId: "", yearLevel: "", sectionId: "", status: "", page: "1" });
   const [searchText, setSearchText] = useSearchBox(filters.search, (value) => setFilter("search", value));
   const [creating, setCreating] = useState(false);
   const [managingId, setManagingId] = useState<number | null>(null);
@@ -59,7 +64,13 @@ export default function EnrollmentPage() {
       />
 
       <Card>
-        <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-2 lg:grid-cols-6">
+        <FilterBar
+          search={
+            <SearchInput value={searchText} onChange={setSearchText} label="Search enrollments" placeholder="Student ID or name..." />
+          }
+          activeCount={countActiveFilters(filters, FILTER_KEYS)}
+          onClear={() => setFilters(clearedFilters(FILTER_KEYS))}
+        >
           <Select
             label="Term"
             hideLabel
@@ -68,14 +79,13 @@ export default function EnrollmentPage() {
               setFilter("semesterId", event.target.value);
             }}
             options={[...terms.map((item) => ({ value: String(item.id), label: item.label })), { value: "all", label: "All terms" }]}
-            className="lg:col-span-2"
+
           />
-          <SearchInput value={searchText} onChange={setSearchText} label="Search enrollments" placeholder="Student ID or name..." className="lg:col-span-2" />
           <Select label="Status" hideLabel placeholder="All statuses" value={filters.status} onChange={(event) => setFilter("status", event.target.value)} options={toOptions(ENROLLMENT_STATUS_LABELS)} />
           <Select label="Program" hideLabel placeholder="All programs" value={filters.programId} onChange={(event) => setFilter("programId", event.target.value)} options={(programs.data ?? []).map((program) => ({ value: String(program.id), label: program.code }))} />
           <Select label="Year level" hideLabel placeholder="All year levels" value={filters.yearLevel} onChange={(event) => setFilter("yearLevel", event.target.value)} options={allYearLevelOptions(programs.data)} />
           <Select label="Section" hideLabel placeholder="All sections" value={filters.sectionId} onChange={(event) => setFilter("sectionId", event.target.value)} options={(sections.data ?? []).map((section) => ({ value: String(section.id), label: section.name }))} />
-        </div>
+        </FilterBar>
 
         {error ? (
           <ErrorState message={error} onRetry={reload} />

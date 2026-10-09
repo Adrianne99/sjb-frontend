@@ -18,6 +18,8 @@ import { requirementService } from "@/services/requirement.service";
 import type { ComplianceRow, RequirementStatus, RequirementType } from "@/types";
 import { cn } from "@/utils/cn";
 import { REQUIREMENT_STATUS_LABELS, toOptions } from "@/utils/labels";
+import { FilterBar } from "@/components/table/FilterBar";
+import { clearedFilters, countActiveFilters } from "@/utils/filters";
 
 /** Small icon + word, so status is never shown by color alone. */
 function StatusCell({ status }: { status: RequirementStatus }) {
@@ -34,10 +36,13 @@ function StatusCell({ status }: { status: RequirementStatus }) {
   );
 }
 
+/** Filters in the Filters panel (the search box is separate). */
+const FILTER_KEYS = ["programId", "completion", "requirementTypeId", "status"] as const;
+
 export default function RequirementsPage() {
   useDocumentTitle("Requirements");
   const programs = usePrograms();
-  const [filters, setFilter] = useQueryState({ search: "", programId: "", completion: "", requirementTypeId: "", status: "", page: "1" });
+  const [filters, setFilter, setFilters] = useQueryState({ search: "", programId: "", completion: "", requirementTypeId: "", status: "", page: "1" });
   const [searchText, setSearchText] = useSearchBox(filters.search, (value) => setFilter("search", value));
 
   const { data, loading, error, reload } = useApi(
@@ -80,8 +85,13 @@ export default function RequirementsPage() {
     <>
       <PageHeader title="Requirements" description="Admission documents submitted by each student. Open a student to update their checklist." />
       <Card>
-        <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-2 lg:grid-cols-5">
-          <SearchInput value={searchText} onChange={setSearchText} label="Search students" placeholder="Student ID or name..." className="lg:col-span-2" />
+        <FilterBar
+          search={
+            <SearchInput value={searchText} onChange={setSearchText} label="Search students" placeholder="Student ID or name..." />
+          }
+          activeCount={countActiveFilters(filters, FILTER_KEYS)}
+          onClear={() => setFilters(clearedFilters(FILTER_KEYS))}
+        >
           <Select label="Program" hideLabel placeholder="All programs" value={filters.programId} onChange={(event) => setFilter("programId", event.target.value)} options={(programs.data ?? []).map((program) => ({ value: String(program.id), label: program.name }))} />
           <Select
             label="Completion"
@@ -98,7 +108,7 @@ export default function RequirementsPage() {
             <Select label="Document" hideLabel placeholder="Any document" value={filters.requirementTypeId} onChange={(event) => setFilter("requirementTypeId", event.target.value)} options={types.map((type) => ({ value: String(type.id), label: shortName(type) }))} />
             <Select label="Document status" hideLabel placeholder="Any status" value={filters.status} disabled={!filters.requirementTypeId} onChange={(event) => setFilter("status", event.target.value)} options={toOptions(REQUIREMENT_STATUS_LABELS)} />
           </div>
-        </div>
+        </FilterBar>
         {error ? (
           <ErrorState message={error} onRetry={reload} />
         ) : (

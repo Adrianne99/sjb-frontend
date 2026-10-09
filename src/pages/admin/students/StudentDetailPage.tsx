@@ -115,18 +115,19 @@ export default function StudentDetailPage() {
           { id: "overview", label: "Overview" },
           ...(can("requirements:read") ? [{ id: "requirements" as const, label: "Requirements" }] : []),
           { id: "enrollment", label: "Enrollment", count: student.enrollments.length },
-          { id: "grades", label: "Grades" },
-          { id: "payments", label: "Payments" },
+          // Each role only gets the tabs it may open (e.g. a cashier has no Grades tab).
+          ...(can("grades:read") ? [{ id: "grades" as const, label: "Grades" }] : []),
+          ...(can("payments:read") ? [{ id: "payments" as const, label: "Payments" }] : []),
           { id: "account", label: "Account" },
         ]}
       />
 
       <div role="tabpanel" aria-labelledby={`tab-${tab}`}>
         {tab === "overview" && <OverviewTab student={student} />}
-        {tab === "requirements" && <RequirementsChecklist studentId={student.id} readOnly={archived} />}
+        {tab === "requirements" && can("requirements:read") && <RequirementsChecklist studentId={student.id} readOnly={archived} />}
         {tab === "enrollment" && <EnrollmentTab student={student} onChanged={reload} />}
-        {tab === "grades" && <GradesTab studentId={student.id} />}
-        {tab === "payments" && <PaymentsTab student={student} onChanged={reload} />}
+        {tab === "grades" && can("grades:read") && <GradesTab studentId={student.id} />}
+        {tab === "payments" && can("payments:read") && <PaymentsTab student={student} onChanged={reload} />}
         {tab === "account" && <AccountTab student={student} onChanged={reload} />}
       </div>
 
@@ -153,12 +154,12 @@ function OverviewTab({ student }: { student: StudentDetail }) {
   const address = [profile.addressLine, profile.barangay, profile.city, profile.province, profile.zipCode].filter(Boolean).join(", ");
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard label="Current term" value={student.currentEnrollment ? formatYearLevel(student.currentEnrollment.yearLevel) : "Not enrolled"} icon={ClipboardList} hint={student.currentEnrollment?.sectionName ?? student.currentEnrollment?.termLabel} />
         <StatCard label="Total balance" value={formatMoney(student.balance.balance)} icon={Wallet} accent="gold" hint={`${formatMoney(student.balance.totalPaid)} paid of ${formatMoney(student.balance.totalAssessed)}`} />
         <StatCard label="Portal account" value={student.account ? (student.account.isActive ? "Active" : "Deactivated") : "None"} icon={KeyRound} hint={student.account?.lastLoginAt ? `Last login ${formatDateTime(student.account.lastLoginAt)}` : undefined} />
       </div>
-      <div className="grid gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
         <Card>
           <CardHeader title="Personal information" icon={<Avatar name={student.fullName} size="sm" />} />
           <CardBody>
@@ -194,6 +195,7 @@ function OverviewTab({ student }: { student: StudentDetail }) {
 
 function EnrollmentTab({ student, onChanged }: { student: StudentDetail; onChanged: () => void }) {
   const { can } = useAuth();
+  const canOpen = can("enrollments:read");
   const [creating, setCreating] = useState(false);
   const [managingId, setManagingId] = useState<number | null>(null);
 
@@ -215,7 +217,8 @@ function EnrollmentTab({ student, onChanged }: { student: StudentDetail; onChang
         rows={student.enrollments}
         getRowKey={(row) => row.id}
         empty={{ title: "No enrollment records yet." }}
-        onRowClick={(row) => setManagingId(row.id)}
+        // Opening an enrollment needs enrollment access (a cashier only sees the list).
+        onRowClick={canOpen ? (row) => setManagingId(row.id) : undefined}
         columns={[
           { header: "Term", primary: true, cell: (row) => <span className="font-medium">{row.termLabel}</span> },
           { header: "Program", cell: (row) => row.programCode },
@@ -223,22 +226,26 @@ function EnrollmentTab({ student, onChanged }: { student: StudentDetail; onChang
           { header: "Section", cell: (row) => row.sectionName ?? "—" },
           { header: "Enrolled on", cell: (row) => formatDate(row.enrollmentDate) },
           { header: "Status", cell: (row) => <StatusBadge kind="enrollment" value={row.status} /> },
-          {
-            header: "Actions",
-            align: "right",
-            cell: (row) => (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={(event) => {
-                  event.stopPropagation(); // the row itself is also clickable
-                  setManagingId(row.id);
-                }}
-              >
-                Manage
-              </Button>
-            ),
-          },
+          ...(canOpen
+            ? [
+                {
+                  header: "Actions",
+                  align: "right" as const,
+                  cell: (row: StudentDetail["enrollments"][number]) => (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(event) => {
+                        event.stopPropagation(); // the row itself is also clickable
+                        setManagingId(row.id);
+                      }}
+                    >
+                      Manage
+                    </Button>
+                  ),
+                },
+              ]
+            : []),
         ]}
       />
       <EnrollmentFormModal
@@ -266,7 +273,7 @@ function GradesTab({ studentId }: { studentId: number }) {
         history={data}
         showStatus
         renderTermActions={(term) => (
-          <ButtonLink to={`/admin/enrollments/${term.enrollmentId}/report-card`} variant="ghost" size="sm" leftIcon={<FileText className="size-4" aria-hidden="true" />}>
+          <ButtonLink to={`/admin/enrollments/${term.enrollmentId}/report-card`} variant="primary" size="sm" leftIcon={<FileText className="size-4" aria-hidden="true" />}>
             Report card
           </ButtonLink>
         )}
@@ -287,7 +294,7 @@ function PaymentsTab({ student, onChanged }: { student: StudentDetail; onChanged
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <StatCard label="Total assessed" value={formatMoney(student.balance.totalAssessed)} icon={FileText} />
         <StatCard label="Total payments" value={formatMoney(student.balance.totalPaid)} icon={Wallet} />
         <StatCard label="Remaining balance" value={formatMoney(student.balance.balance)} icon={Wallet} accent="gold" />

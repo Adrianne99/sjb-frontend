@@ -60,6 +60,8 @@ export interface Instructor {
   fullName: string;
   email: string | null;
   isActive: boolean;
+  /** True when a TEACHER login is linked to this instructor. */
+  hasAccount: boolean;
 }
 
 export interface Room {

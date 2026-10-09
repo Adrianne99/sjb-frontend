@@ -22,11 +22,16 @@ import type { StudentListItem } from "@/types";
 import { cn } from "@/utils/cn";
 import { formatMoney, formatYearLevel, isPositiveAmount } from "@/utils/format";
 import { allYearLevelOptions, ENROLLMENT_STATUS_LABELS, STUDENT_STATUS_LABELS, toOptions } from "@/utils/labels";
+import { FilterBar } from "@/components/table/FilterBar";
+import { clearedFilters, countActiveFilters } from "@/utils/filters";
+
+/** Filters in the Filters panel (the search box is separate). */
+const FILTER_KEYS = ["programId", "yearLevel", "sectionId", "enrollmentStatus", "status"] as const;
 
 export default function StudentsPage() {
   useDocumentTitle("Students");
   const { can } = useAuth();
-  const [filters, setFilter] = useQueryState({ search: "", programId: "", yearLevel: "", sectionId: "", enrollmentStatus: "", status: "", page: "1" });
+  const [filters, setFilter, setFilters] = useQueryState({ search: "", programId: "", yearLevel: "", sectionId: "", enrollmentStatus: "", status: "", page: "1" });
 
   const [searchText, setSearchText] = useSearchBox(filters.search, (value) => setFilter("search", value));
 
@@ -56,8 +61,13 @@ export default function StudentsPage() {
       />
 
       <Card>
-        <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
-          <SearchInput value={searchText} onChange={setSearchText} label="Search students" placeholder="Student ID or name..." className="sm:col-span-2" />
+        <FilterBar
+          search={
+            <SearchInput value={searchText} onChange={setSearchText} label="Search students" placeholder="Student ID or name..." />
+          }
+          activeCount={countActiveFilters(filters, FILTER_KEYS)}
+          onClear={() => setFilters(clearedFilters(FILTER_KEYS))}
+        >
           <Select label="Program" hideLabel placeholder="All programs" value={filters.programId} onChange={(event) => setFilter("programId", event.target.value)} options={(programs.data ?? []).map((program) => ({ value: String(program.id), label: program.code }))} />
           <Select label="Year level" hideLabel placeholder="All year levels" value={filters.yearLevel} onChange={(event) => setFilter("yearLevel", event.target.value)} options={allYearLevelOptions(programs.data)} />
           <Select label="Section" hideLabel placeholder="All sections" value={filters.sectionId} onChange={(event) => setFilter("sectionId", event.target.value)} options={(sections.data ?? []).map((section) => ({ value: String(section.id), label: section.name }))} />
@@ -77,7 +87,7 @@ export default function StudentsPage() {
             onChange={(event) => setFilter("status", event.target.value)}
             options={toOptions(STUDENT_STATUS_LABELS)}
           />
-        </div>
+        </FilterBar>
 
         {error ? (
           <ErrorState message={error} onRetry={reload} />

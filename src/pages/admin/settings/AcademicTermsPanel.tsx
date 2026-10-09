@@ -87,7 +87,7 @@ export function AcademicTermsPanel() {
                   </IconButton>
                 </div>
               </div>
-              <ul className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+              <ul className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                 {year.semesters.map((term) => (
                   <li key={term.id} className="flex items-center justify-between gap-2 rounded-lg border border-border px-3 py-2">
                     <div className="min-w-0">

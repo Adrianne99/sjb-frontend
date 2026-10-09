@@ -30,7 +30,7 @@ export default function StudentBalancePage() {
       {statement.loading || !statement.data ? (
         <SkeletonCards count={3} />
       ) : (
-        <div className="grid gap-4 sm:grid-cols-3">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
           <StatCard label="Total assessed" value={formatMoney(statement.data.totalAssessed)} icon={Receipt} />
           <StatCard label="Total payments" value={formatMoney(statement.data.totalPaid)} icon={Banknote} />
           <StatCard

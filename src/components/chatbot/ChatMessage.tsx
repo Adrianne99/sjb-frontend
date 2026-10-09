@@ -7,7 +7,8 @@ export interface ChatEntry {
   text: string;
 }
 
-/** One chat bubble. Text is rendered as plain text (never as HTML). */
+/** One chat bubble. Text is rendered as plain text (never as HTML).
+ *  `wrap-anywhere` breaks very long words (e.g. pasted links) so they stay inside the bubble. */
 export function ChatMessage({ entry }: { entry: ChatEntry }) {
   const isUser = entry.from === "user";
   return (
@@ -17,7 +18,7 @@ export function ChatMessage({ entry }: { entry: ChatEntry }) {
       )}
       <p
         className={cn(
-          "max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[15px] leading-relaxed whitespace-pre-line sm:max-w-[82%] sm:text-sm",
+          "min-w-0 max-w-[85%] rounded-2xl px-3.5 py-2.5 text-[15px] leading-relaxed whitespace-pre-line wrap-anywhere sm:max-w-[82%] sm:text-sm",
           isUser ? "rounded-br-sm bg-primary-600 text-white" : "rounded-bl-sm bg-surface-muted text-ink",
         )}
       >

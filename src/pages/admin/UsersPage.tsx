@@ -20,7 +20,9 @@ import { Button } from "@/components/ui/Button";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { ErrorState } from "@/components/ui/States";
 import { useApi } from "@/hooks/useApi";
+import { academicService } from "@/services/academic.service";
 import { useAuth } from "@/hooks/useAuth";
+import { OFFICE_ROLE_OPTIONS, ROLE_DESCRIPTIONS, ROLE_LABELS, ROLE_TONES } from "@/config/roles";
 import { useDocumentTitle } from "@/hooks/useDocumentTitle";
 import { useFormErrors } from "@/hooks/useFormErrors";
 import { useQueryState } from "@/hooks/useQueryState";
@@ -30,17 +32,20 @@ import { userService } from "@/services/admin.service";
 import { getErrorMessage } from "@/services/api";
 import type { IssuedCredentials, Role, UserAccount } from "@/types";
 import { formatDateTime } from "@/utils/format";
+import { FilterBar } from "@/components/table/FilterBar";
+import { clearedFilters, countActiveFilters } from "@/utils/filters";
 
-const ROLE_LABELS: Record<Role, string> = { ADMIN: "Administrator", STAFF: "Staff", STUDENT: "Student" };
-const ROLE_TONE = { ADMIN: "gold", STAFF: "info", STUDENT: "neutral" } as const;
 
-type PendingAction = { kind: "role"; user: UserAccount; role: Role } | { kind: "active"; user: UserAccount } | { kind: "reset"; user: UserAccount };
+type PendingAction = { kind: "role"; user: UserAccount; role: Role; instructorId?: number } | { kind: "active"; user: UserAccount } | { kind: "reset"; user: UserAccount };
+
+/** Filters in the Filters panel (the search box is separate). */
+const FILTER_KEYS = ["role", "isActive"] as const;
 
 export default function UsersPage() {
   useDocumentTitle("User Accounts");
   const { user: me } = useAuth();
   const toast = useToast();
-  const [filters, setFilter] = useQueryState({ search: "", role: "", isActive: "", page: "1" });
+  const [filters, setFilter, setFilters] = useQueryState({ search: "", role: "", isActive: "", page: "1" });
   const [searchText, setSearchText] = useSearchBox(filters.search, (value) => setFilter("search", value));
   const { data, loading, error, reload } = useApi(() => userService.list({ ...filters, pageSize: 20 }), [filters.search, filters.role, filters.isActive, filters.page]);
 
@@ -49,6 +54,8 @@ export default function UsersPage() {
   const [pending, setPending] = useState<PendingAction | null>(null);
   const [busy, setBusy] = useState(false);
   const [credentials, setCredentials] = useState<IssuedCredentials | null>(null);
+  /** The account whose role is being chosen (step 1 of "Change role"). */
+  const [roleFor, setRoleFor] = useState<UserAccount | null>(null);
 
   async function runPending() {
     if (!pending) return;
@@ -58,7 +65,7 @@ export default function UsersPage() {
         const response = await userService.resetPassword(pending.user.id);
         setCredentials(response.data);
       } else if (pending.kind === "role") {
-        await userService.update(pending.user.id, { role: pending.role });
+        await userService.update(pending.user.id, { role: pending.role, ...(pending.instructorId ? { instructorId: pending.instructorId } : {}) });
         toast.success("Role changed", `${pending.user.username} is now ${ROLE_LABELS[pending.role]}. They were signed out.`);
       } else {
         await userService.update(pending.user.id, { isActive: !pending.user.isActive });
@@ -87,7 +94,7 @@ export default function UsersPage() {
     <>
       <PageHeader
         title="User Accounts"
-        description="Manage staff and administrator accounts, roles and access."
+        description="Manage office accounts (administrator, staff, registrar, cashier), roles and access."
         actions={
           <Button onClick={() => setCreating(true)} leftIcon={<UserPlus className="size-4" aria-hidden="true" />}>
             New staff account
@@ -95,8 +102,13 @@ export default function UsersPage() {
         }
       />
       <Card>
-        <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-4">
-          <SearchInput value={searchText} onChange={setSearchText} label="Search accounts" placeholder="Name, username or email..." className="sm:col-span-2" />
+        <FilterBar
+          search={
+            <SearchInput value={searchText} onChange={setSearchText} label="Search accounts" placeholder="Name, username or email..." />
+          }
+          activeCount={countActiveFilters(filters, FILTER_KEYS)}
+          onClear={() => setFilters(clearedFilters(FILTER_KEYS))}
+        >
           <Select label="Role" hideLabel placeholder="All roles" value={filters.role} onChange={(event) => setFilter("role", event.target.value)} options={(Object.keys(ROLE_LABELS) as Role[]).map((role) => ({ value: role, label: ROLE_LABELS[role] }))} />
           <Select
             label="Status"
@@ -109,7 +121,7 @@ export default function UsersPage() {
               { value: "false", label: "Deactivated" },
             ]}
           />
-        </div>
+        </FilterBar>
         {error ? (
           <ErrorState message={error} onRetry={reload} />
         ) : (
@@ -141,7 +153,15 @@ export default function UsersPage() {
                   ),
                 },
                 { header: "Username", cell: (row) => <span className="font-mono text-xs">{row.username}</span> },
-                { header: "Role", cell: (row) => <Badge tone={ROLE_TONE[row.role]}>{ROLE_LABELS[row.role]}</Badge> },
+                {
+                  header: "Role",
+                  cell: (row) => (
+                    <div>
+                      <Badge tone={ROLE_TONES[row.role]}>{ROLE_LABELS[row.role]}</Badge>
+                      {row.instructorName && <p className="mt-1 text-xs text-ink-muted">Instructor: {row.instructorName}</p>}
+                    </div>
+                  ),
+                },
                 {
                   header: "Status",
                   cell: (row) => (
@@ -168,7 +188,7 @@ export default function UsersPage() {
                           { label: "Edit details", icon: Pencil, onClick: () => setEditing(row) },
                           ...(row.id !== me?.id
                             ? [
-                                { label: row.role === "ADMIN" ? "Make staff" : "Make administrator", icon: ShieldCheck, onClick: () => setPending({ kind: "role", user: row, role: (row.role === "ADMIN" ? "STAFF" : "ADMIN") as Role }) },
+                                { label: "Change role", icon: ShieldCheck, onClick: () => setRoleFor(row) },
                                 { label: row.isActive ? "Deactivate" : "Activate", icon: ShieldOff, danger: row.isActive, onClick: () => setPending({ kind: "active", user: row }) },
                               ]
                             : []),
@@ -196,6 +216,15 @@ export default function UsersPage() {
           setEditing(null);
           if (issued) setCredentials(issued);
           reload();
+        }}
+      />
+      <ChangeRoleModal
+        user={roleFor}
+        onClose={() => setRoleFor(null)}
+        onChoose={(role, instructorId) => {
+          // Step 2: the usual "Are you sure?" dialog.
+          if (roleFor) setPending({ kind: "role", user: roleFor, role, instructorId });
+          setRoleFor(null);
         }}
       />
       <ConfirmDialog
@@ -241,6 +270,8 @@ function StaffForm({ user, onClose, onSaved }: { user: UserAccount | null; onClo
     lastName: user?.lastName ?? "",
     position: user?.position ?? "",
     role: (user?.role ?? "STAFF") as Role,
+    /** Only for TEACHER accounts. */
+    instructorId: "",
   });
   const [saving, setSaving] = useState(false);
   const { errors, setFromError } = useFormErrors();
@@ -265,7 +296,12 @@ function StaffForm({ user, onClose, onSaved }: { user: UserAccount | null; onClo
         toast.success("Account updated");
         onSaved(null);
       } else {
-        const response = await userService.create({ ...values, position: values.position || null });
+        const { instructorId, ...rest } = values;
+        const response = await userService.create({
+          ...rest,
+          position: values.position || null,
+          ...(values.role === "TEACHER" && instructorId ? { instructorId: Number(instructorId) } : {}),
+        });
         toast.success("Account created");
         onSaved(response.data.credentials);
       }
@@ -279,7 +315,7 @@ function StaffForm({ user, onClose, onSaved }: { user: UserAccount | null; onClo
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
       {!user && <Alert tone="info">A random temporary password is generated. The user must change it at first login.</Alert>}
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <TextInput label="First name" required value={values.firstName} onChange={set("firstName")} error={errors.firstName} />
         <TextInput label="Last name" required value={values.lastName} onChange={set("lastName")} error={errors.lastName} />
         {!user && <TextInput label="Username" required value={values.username} onChange={set("username")} error={errors.username} hint="Filled in from the first name. If it is taken, add the last name, e.g. maria.santos" />}
@@ -290,12 +326,12 @@ function StaffForm({ user, onClose, onSaved }: { user: UserAccount | null; onClo
             label="Role"
             value={values.role}
             onChange={set("role")}
-            options={[
-              { value: "STAFF", label: "Staff" },
-              { value: "ADMIN", label: "Administrator" },
-            ]}
-            hint="Staff never receive administrator rights automatically."
+            options={OFFICE_ROLE_OPTIONS}
+            hint={ROLE_DESCRIPTIONS[values.role as keyof typeof ROLE_DESCRIPTIONS]}
           />
+        )}
+        {!user && values.role === "TEACHER" && (
+          <InstructorSelect value={values.instructorId} onChange={(id) => setValues((current) => ({ ...current, instructorId: id }))} error={errors.instructorId} />
         )}
       </div>
       <div className="flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:justify-end">
@@ -307,5 +343,78 @@ function StaffForm({ user, onClose, onSaved }: { user: UserAccount | null; onClo
         </Button>
       </div>
     </form>
+  );
+}
+
+/** Step 1 of "Change role": pick one of the office roles (each with what it may do). */
+function ChangeRoleModal({ user, onClose, onChoose }: { user: UserAccount | null; onClose: () => void; onChoose: (role: Role, instructorId?: number) => void }) {
+  return (
+    <Modal open={user !== null} onClose={onClose} title="Change role" size="md">
+      {user && <ChangeRoleForm key={user.id} user={user} onClose={onClose} onChoose={onChoose} />}
+    </Modal>
+  );
+}
+
+function ChangeRoleForm({ user, onClose, onChoose }: { user: UserAccount; onClose: () => void; onChoose: (role: Role, instructorId?: number) => void }) {
+  const [role, setRole] = useState<Role>(user.role);
+  const [instructorId, setInstructorId] = useState("");
+  const needsInstructor = role === "TEACHER";
+  const ready = role !== user.role && (!needsInstructor || instructorId !== "");
+
+  function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    if (ready) onChoose(role, needsInstructor ? Number(instructorId) : undefined);
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+      <p className="text-sm text-ink-soft">
+        {user.displayName} is currently <strong>{ROLE_LABELS[user.role]}</strong>.
+      </p>
+      <Select
+        label="New role"
+        value={role}
+        onChange={(event) => setRole(event.target.value as Role)}
+        options={OFFICE_ROLE_OPTIONS}
+        hint={ROLE_DESCRIPTIONS[role as keyof typeof ROLE_DESCRIPTIONS]}
+      />
+      {needsInstructor && <InstructorSelect value={instructorId} onChange={setInstructorId} />}
+      <div className="flex flex-col-reverse gap-2 border-t border-border pt-4 sm:flex-row sm:justify-end">
+        <Button variant="secondary" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={!ready}>
+          Continue
+        </Button>
+      </div>
+    </form>
+  );
+}
+
+/**
+ * Picks the instructor a TEACHER account belongs to (from Settings → Instructors).
+ * Instructors who already have a teacher account cannot be picked again.
+ */
+function InstructorSelect({ value, onChange, error }: { value: string; onChange: (id: string) => void; error?: string }) {
+  const { data, loading } = useApi(() => academicService.instructors(), []);
+  const options = (data ?? [])
+    .filter((instructor) => instructor.isActive)
+    .map((instructor) => ({
+      value: String(instructor.id),
+      label: `${instructor.lastName}, ${instructor.firstName} (${instructor.employeeNumber})${instructor.hasAccount ? " — already has an account" : ""}`,
+      disabled: instructor.hasAccount,
+    }));
+  return (
+    <Select
+      label="Instructor"
+      required
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+      options={options}
+      placeholder={loading ? "Loading instructors..." : "Select the instructor"}
+      error={error}
+      hint="The teacher sees this instructor's classes only. Add instructors in Settings → Instructors."
+      className="sm:col-span-2"
+    />
   );
 }

@@ -17,7 +17,7 @@ export default function StudentGradesPage() {
         title="My Grades"
         description="Your academic history. Only grades published by the school are shown."
         actions={
-          <ButtonLink to="/student/report-card" variant="secondary" leftIcon={<FileText className="size-4" aria-hidden="true" />}>
+          <ButtonLink to="/student/report-card" variant="primary" leftIcon={<FileText className="size-4" aria-hidden="true" />}>
             Report card
           </ButtonLink>
         }

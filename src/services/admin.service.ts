@@ -17,9 +17,10 @@ import { api } from "./api";
 
 export const userService = {
   list: (query: QueryParams) => api.list<UserAccount>("/users", query),
-  create: (body: { username: string; email: string; firstName: string; lastName: string; position: string | null; role: Role }) =>
+  /** `instructorId` is required for a TEACHER account. */
+  create: (body: { username: string; email: string; firstName: string; lastName: string; position: string | null; role: Role; instructorId?: number }) =>
     api.post<{ user: UserAccount; credentials: IssuedCredentials }>("/users", body),
-  update: (id: number, body: Partial<{ email: string | null; firstName: string; lastName: string; position: string | null; role: Role; isActive: boolean }>) =>
+  update: (id: number, body: Partial<{ email: string | null; firstName: string; lastName: string; position: string | null; role: Role; instructorId: number; isActive: boolean }>) =>
     api.put<UserAccount>(`/users/${id}`, body),
   resetPassword: (id: number) => api.post<IssuedCredentials>(`/users/${id}/reset-password`),
 };
@@ -49,6 +50,7 @@ export interface AnnouncementInput {
   title: string;
   content: string;
   audience: Announcement["audience"];
+  category: Announcement["category"];
   status: NonNullable<Announcement["status"]>;
   publishDate: string;
   expirationDate: string | null;

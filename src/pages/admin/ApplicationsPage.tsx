@@ -35,11 +35,18 @@ import { applicationService } from "@/services/application.service";
 import type { Application, ApplicationDetail } from "@/types";
 import { formatDate, formatDateTime } from "@/utils/format";
 import { APPLICANT_TYPE_LABELS, APPLICATION_STATUS_LABELS, toOptions, yearLevelOptions } from "@/utils/labels";
+import { FilterBar } from "@/components/table/FilterBar";
+import { clearedFilters, countActiveFilters } from "@/utils/filters";
+
+/** Filters in the Filters panel (the search box is separate). */
+const FILTER_KEYS = ["status", "programId"] as const;
+/** Values that count as "no filter" (the page's own defaults). */
+const FILTER_DEFAULTS = {status: "SUBMITTED"};
 
 export default function ApplicationsPage() {
   useDocumentTitle("Applications");
   const programs = usePrograms();
-  const [filters, setFilter] = useQueryState({ search: "", status: "SUBMITTED", programId: "", page: "1" });
+  const [filters, setFilter, setFilters] = useQueryState({ search: "", status: "SUBMITTED", programId: "", page: "1" });
   const [searchText, setSearchText] = useSearchBox(filters.search, (value) => setFilter("search", value));
   const [openId, setOpenId] = useState<number | null>(null);
 
@@ -56,8 +63,13 @@ export default function ApplicationsPage() {
         description={`Online pre-registrations from the website ("Enroll Now"). ${waiting} waiting for a visit to the Registrar's Office.`}
       />
       <Card>
-        <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-2 lg:grid-cols-4">
-          <SearchInput value={searchText} onChange={setSearchText} label="Search applications" placeholder="Reference no., name or email..." className="lg:col-span-2" />
+        <FilterBar
+          search={
+            <SearchInput value={searchText} onChange={setSearchText} label="Search applications" placeholder="Reference no., name or email..." />
+          }
+          activeCount={countActiveFilters(filters, FILTER_KEYS, FILTER_DEFAULTS)}
+          onClear={() => setFilters(clearedFilters(FILTER_KEYS))}
+        >
           <Select label="Status" hideLabel placeholder="All statuses" value={filters.status} onChange={(event) => setFilter("status", event.target.value)} options={toOptions(APPLICATION_STATUS_LABELS)} />
           <Select
             label="Program"
@@ -67,7 +79,7 @@ export default function ApplicationsPage() {
             onChange={(event) => setFilter("programId", event.target.value)}
             options={(programs.data ?? []).map((program) => ({ value: String(program.id), label: program.name }))}
           />
-        </div>
+        </FilterBar>
         {error ? (
           <ErrorState message={error} onRetry={reload} />
         ) : (
@@ -233,7 +245,7 @@ function ConvertForm({ application, onConverted }: { application: ApplicationDet
         </p>
         <p className="text-xs text-ink-muted">Do this when the applicant is at the Registrar&apos;s Office with their documents. Their details are copied from the application.</p>
       </div>
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
         <Select label="Term" required value={termId} onChange={(event) => setSemesterId(event.target.value)} options={terms.map((item) => ({ value: String(item.id), label: item.label }))} error={errors.semesterId} />
         <Select
           label="Year level"

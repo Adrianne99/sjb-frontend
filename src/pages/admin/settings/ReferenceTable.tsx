@@ -1,13 +1,15 @@
 // A reusable "list + add/edit dialog" for simple reference data
 // (programs, subjects, instructors, rooms, sections). Each tab only describes
 // its columns and form fields; this component does the rest.
-import { Pencil, Plus } from "lucide-react";
+// Pass `remove` to also show a Delete button (with an "Are you sure?" step).
+import { Pencil, Plus, Trash2 } from "lucide-react";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { Card, CardHeader } from "@/components/card/Card";
 import { Checkbox } from "@/components/form/Checkbox";
 import { Select, type SelectOption } from "@/components/form/Select";
 import { TextInput } from "@/components/form/TextInput";
 import { Textarea } from "@/components/form/Textarea";
+import { ConfirmDialog } from "@/components/modal/ConfirmDialog";
 import { Modal } from "@/components/modal/Modal";
 import { DataTable, type Column } from "@/components/table/DataTable";
 import { Button, IconButton } from "@/components/ui/Button";
@@ -44,11 +46,36 @@ interface ReferenceTableProps<T extends { id: number }> {
   toPayload: (values: FormValues) => object;
   create: (payload: object) => Promise<unknown>;
   update: (id: number, payload: object) => Promise<unknown>;
+  /** Optional: delete a row. The server refuses rows that are still in use. */
+  remove?: (id: number) => Promise<unknown>;
+  /** Name shown in the delete question, e.g. "IT 1-A". */
+  rowLabel?: (row: T) => string;
   toolbar?: ReactNode;
 }
 
 export function ReferenceTable<T extends { id: number }>(props: ReferenceTableProps<T>) {
   const [editing, setEditing] = useState<T | "new" | null>(null);
+  const [deleting, setDeleting] = useState<T | null>(null);
+  const [busy, setBusy] = useState(false);
+  const toast = useToast();
+  const { remove, rowLabel, entityLabel } = props;
+
+  async function confirmDelete() {
+    if (!deleting || !remove) return;
+    setBusy(true);
+    try {
+      await remove(deleting.id);
+      toast.success(`${entityLabel[0].toUpperCase()}${entityLabel.slice(1)} deleted`);
+      invalidateLookups(); // dropdowns elsewhere drop it too
+      setDeleting(null);
+      props.reload();
+    } catch (error) {
+      toast.error(`Could not delete this ${entityLabel}`, getErrorMessage(error));
+      setDeleting(null);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <Card>
@@ -77,9 +104,16 @@ export function ReferenceTable<T extends { id: number }>(props: ReferenceTablePr
               header: "Actions",
               align: "right",
               cell: (row) => (
-                <IconButton label={`Edit ${props.entityLabel}`} size="sm" onClick={() => setEditing(row)}>
-                  <Pencil className="size-4" aria-hidden="true" />
-                </IconButton>
+                <span className="inline-flex gap-1">
+                  <IconButton label={`Edit ${props.entityLabel}`} size="sm" onClick={() => setEditing(row)}>
+                    <Pencil className="size-4" aria-hidden="true" />
+                  </IconButton>
+                  {remove && (
+                    <IconButton label={`Delete ${props.entityLabel}`} size="sm" onClick={() => setDeleting(row)}>
+                      <Trash2 className="size-4 text-danger-600" aria-hidden="true" />
+                    </IconButton>
+                  )}
+                </span>
               ),
             },
           ]}
@@ -107,6 +141,17 @@ export function ReferenceTable<T extends { id: number }>(props: ReferenceTablePr
           />
         )}
       </Modal>
+
+      <ConfirmDialog
+        open={deleting !== null}
+        tone="danger"
+        title={`Delete this ${entityLabel}?`}
+        description={`${deleting && rowLabel ? rowLabel(deleting) : `This ${entityLabel}`} will be removed. This only works if nothing uses it yet (students, class schedules, grades or attendance).`}
+        confirmLabel="Delete"
+        loading={busy}
+        onCancel={() => setDeleting(null)}
+        onConfirm={confirmDelete}
+      />
     </Card>
   );
 }
@@ -147,7 +192,7 @@ function ReferenceForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         {fields.map((field) => {
           const common = { label: field.label, required: field.required, hint: field.hint, error: errors[field.name] };
           const value = values[field.name];

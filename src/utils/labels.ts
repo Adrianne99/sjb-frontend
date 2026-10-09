@@ -2,6 +2,7 @@
 import { formatYearLevel } from "./format";
 import type {
   AnnouncementAudience,
+  AnnouncementCategory,
   AnnouncementStatus,
   ApplicantType,
   ApplicationStatus,
@@ -57,6 +58,13 @@ export const ANNOUNCEMENT_STATUS_LABELS: Record<AnnouncementStatus, string> = {
   DRAFT: "Draft",
   PUBLISHED: "Published",
   ARCHIVED: "Archived",
+};
+
+export const ANNOUNCEMENT_CATEGORY_LABELS: Record<AnnouncementCategory, string> = {
+  GENERAL: "General",
+  ACADEMIC: "Academic",
+  EVENT: "Event",
+  ANNOUNCEMENT: "Announcement",
 };
 
 export const AUDIENCE_LABELS: Record<AnnouncementAudience, string> = {

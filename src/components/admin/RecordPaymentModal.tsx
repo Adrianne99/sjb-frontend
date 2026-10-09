@@ -119,7 +119,7 @@ function RecordPaymentForm({ onClose, onSaved, initialStudent }: Props) {
               options={terms.map((term) => ({ value: String(term.enrollmentId), label: `${term.termLabel} — balance ${formatMoney(term.balance)}` }))}
               error={errors.enrollmentId}
             />
-            <div className="grid gap-3 rounded-lg bg-surface-muted p-4 text-sm sm:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 rounded-lg bg-surface-muted p-4 text-sm sm:grid-cols-3">
               <p>
                 <span className="block text-xs text-ink-muted">Assessed</span>
                 <span className="font-medium tabular-nums">{formatMoney(selectedTerm.totalAssessed)}</span>
@@ -134,7 +134,7 @@ function RecordPaymentForm({ onClose, onSaved, initialStudent }: Props) {
               </p>
             </div>
 
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
               <TextInput label="Amount (₱)" type="number" min="0.01" step="0.01" inputMode="decimal" required value={amount} onChange={(event) => setAmount(event.target.value)} error={errors.amount} />
               <TextInput label="Payment date" type="date" required value={paymentDate} onChange={(event) => setPaymentDate(event.target.value)} error={errors.paymentDate} />
               <Select label="Payment method" required value={paymentMethod} onChange={(event) => setPaymentMethod(event.target.value as PaymentMethod)} options={toOptions(PAYMENT_METHOD_LABELS)} error={errors.paymentMethod} />

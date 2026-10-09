@@ -6,7 +6,7 @@
 //   <AnnouncementCard>     compact text card with "Read more" (student dashboard)
 //
 // The website versions open the full post at /announcements/:id.
-import { ArrowRight, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { useId, useState } from "react";
 import { Link } from "react-router";
 import { school } from "@/config/school";
@@ -14,67 +14,79 @@ import { apiUrl } from "@/services/api";
 import type { Announcement } from "@/types";
 import { cn } from "@/utils/cn";
 import { formatDate } from "@/utils/format";
+import { ANNOUNCEMENT_CATEGORY_LABELS } from "@/utils/labels";
 
 const announcementLink = (announcement: Announcement) => `/announcements/${announcement.id}`;
 
 /**
- * The cover photo, always the same shape (cropped to fit). Posts without a photo
- * get a navy panel with the school crest, so every card looks finished.
+ * A school photo for posts without their own (from school.images.announcementFallbacks).
+ * The announcement ID picks it, so the same post always shows the same photo.
+ */
+function fallbackPhotoFor(announcement: Announcement) {
+  const photos = school.images.announcementFallbacks;
+  return photos[announcement.id % photos.length];
+}
+
+/**
+ * The cover photo, always the same shape (cropped to fit). Posts without a
+ * photo get one of the school's own photos, so every card looks finished.
  */
 export function AnnouncementPhoto({ announcement, className }: { announcement: Announcement; className?: string }) {
-  if (announcement.imagePath) {
-    return (
-      <img
-        src={apiUrl(announcement.imagePath)}
-        alt=""
-        loading="lazy"
-        className={cn("size-full object-cover transition-transform duration-500 group-hover:scale-[1.03]", className)}
-      />
-    );
-  }
+  const src = announcement.imagePath ? apiUrl(announcement.imagePath) : fallbackPhotoFor(announcement);
+  return <img src={src} alt="" loading="lazy" className={cn("size-full bg-primary-800 object-cover", className)} />;
+}
+
+/**
+ * The category tag and the date, e.g. [EVENT] Sep 15, 2026.
+ * `inverted` = on a navy background (the full announcement page).
+ */
+export function PostMeta({ announcement, inverted = false, className }: { announcement: Announcement; inverted?: boolean; className?: string }) {
   return (
-    <div className={cn("flex size-full items-center justify-center bg-linear-to-br from-primary-900 to-primary-700", className)} aria-hidden="true">
-      <img src={school.logo.src} alt="" className="h-1/3 max-h-20 w-auto opacity-30" />
+    <div className={cn("flex flex-wrap items-center gap-x-2.5 gap-y-1", className)}>
+      <span className={cn("rounded px-2 py-0.5 text-[0.7rem] font-semibold tracking-wide uppercase", inverted ? "bg-gold-400 text-primary-950" : "bg-gold-100 text-gold-700")}>
+        {ANNOUNCEMENT_CATEGORY_LABELS[announcement.category]}
+      </span>
+      <time dateTime={announcement.publishDate} className={cn("text-xs font-medium", inverted ? "text-primary-100" : "text-ink-muted")}>
+        {formatDate(announcement.publishDate)}
+      </time>
     </div>
   );
 }
 
-function PostDate({ announcement, className }: { announcement: Announcement; className?: string }) {
-  return (
-    <time dateTime={announcement.publishDate} className={cn("text-xs font-semibold tracking-[0.18em] text-gold-700 uppercase", className)}>
-      {formatDate(announcement.publishDate)}
-    </time>
-  );
-}
 
-/** Large card for the newest post. */
+/** Large white card for the newest post: photo on top, then date, title, excerpt. */
 export function AnnouncementFeature({ announcement }: { announcement: Announcement }) {
   return (
-    <Link to={announcementLink(announcement)} className="group block focus-visible:outline-none">
-      <div className="aspect-16/10 overflow-hidden rounded-2xl bg-primary-900 ring-offset-2 group-focus-visible:ring-2 group-focus-visible:ring-primary-500">
+    <Link
+      to={announcementLink(announcement)}
+      className="group block h-full overflow-hidden rounded-2xl border border-border bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500"
+    >
+      <div className="aspect-video overflow-hidden bg-primary-900">
         <AnnouncementPhoto announcement={announcement} />
       </div>
-      <PostDate announcement={announcement} className="mt-6 block" />
-      <h3 className="mt-3 font-display text-2xl leading-snug font-light text-primary-900 group-hover:text-primary-700 sm:text-3xl">{announcement.title}</h3>
-      <p className="mt-3 line-clamp-3 text-sm leading-relaxed whitespace-pre-line text-ink-muted">{announcement.content}</p>
-      <span className="mt-4 inline-flex items-center gap-2 text-sm font-medium tracking-[0.12em] text-primary-900 uppercase">
-        <span className="border-b border-primary-900/30 pb-1 transition-colors group-hover:border-gold-500">Read more</span>
-        <ArrowRight className="size-4 transition-transform group-hover:translate-x-1" aria-hidden="true" />
-      </span>
+      <div className="p-6 sm:p-7">
+        <PostMeta announcement={announcement} />
+        <h3 className="mt-2 font-display text-xl leading-snug font-light text-primary-900 group-hover:text-primary-700 sm:text-2xl">{announcement.title}</h3>
+        <p className="mt-2.5 line-clamp-3 text-sm leading-relaxed whitespace-pre-line text-ink-muted">{announcement.content}</p>
+        <span className="mt-4 inline-block text-sm font-semibold text-primary-800 underline decoration-primary-800/30 underline-offset-4 group-hover:decoration-primary-800">Read more</span>
+      </div>
     </Link>
   );
 }
 
-/** Small row: square thumbnail, date and title. */
+/** Small row: thumbnail, date tag, title and a short excerpt. */
 export function AnnouncementRow({ announcement }: { announcement: Announcement }) {
   return (
-    <Link to={announcementLink(announcement)} className="group flex gap-5 py-6 focus-visible:outline-none">
-      <div className="size-24 shrink-0 overflow-hidden rounded-xl bg-primary-900 group-focus-visible:ring-2 group-focus-visible:ring-primary-500 sm:size-28">
+    <Link
+      to={announcementLink(announcement)}
+      className="group flex gap-4 rounded-xl p-2 transition-colors hover:bg-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-500 sm:gap-5"
+    >
+      <div className="size-24 shrink-0 overflow-hidden rounded-xl bg-primary-900 sm:h-24 sm:w-32">
         <AnnouncementPhoto announcement={announcement} />
       </div>
-      <div className="min-w-0">
-        <PostDate announcement={announcement} />
-        <h3 className="mt-2 font-display text-lg leading-snug font-light text-primary-900 group-hover:text-primary-700">{announcement.title}</h3>
+      <div className="min-w-0 py-0.5">
+        <PostMeta announcement={announcement} />
+        <h3 className="mt-1 font-display text-base leading-snug font-semibold text-primary-900 group-hover:text-primary-700">{announcement.title}</h3>
         <p className="mt-1 line-clamp-2 text-sm text-ink-muted">{announcement.content}</p>
       </div>
     </Link>
@@ -88,7 +100,7 @@ export function AnnouncementTile({ announcement }: { announcement: Announcement 
       <div className="aspect-4/3 overflow-hidden rounded-2xl bg-primary-900 group-focus-visible:ring-2 group-focus-visible:ring-primary-500">
         <AnnouncementPhoto announcement={announcement} />
       </div>
-      <PostDate announcement={announcement} className="mt-5 block" />
+      <PostMeta announcement={announcement} className="mt-5" />
       <h3 className="mt-2 font-display text-xl leading-snug font-light text-primary-900 group-hover:text-primary-700">{announcement.title}</h3>
       <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-ink-muted">{announcement.content}</p>
     </Link>
@@ -104,7 +116,7 @@ export function AnnouncementCard({ announcement, compact = false }: { announceme
 
   return (
     <article className={cn("flex h-full flex-col rounded-xl border border-border bg-surface p-5 shadow-sm", compact && "shadow-none")}>
-      <PostDate announcement={announcement} />
+      <PostMeta announcement={announcement} />
       <h3 className="mt-2 text-base font-semibold">{announcement.title}</h3>
       <p id={contentId} className={cn("mt-2 flex-1 text-sm leading-relaxed whitespace-pre-line text-ink-soft", !expanded && "line-clamp-3")}>
         {announcement.content}

@@ -6,6 +6,7 @@ import { Badge } from "@/components/badge/Badge";
 import { Avatar } from "@/components/ui/Avatar";
 import { Logo } from "@/components/ui/Logo";
 import type { NavGroup } from "@/config/navigation";
+import { roleBadgeText } from "@/config/roles";
 import { useAuth } from "@/hooks/useAuth";
 import { cn } from "@/utils/cn";
 
@@ -81,7 +82,7 @@ export function Sidebar({ groups, tone, homePath, subtitle, onNavigate, onLogout
             <div className="min-w-0 flex-1">
               <p className={cn("truncate text-sm font-medium", navy ? "text-white" : "text-ink")}>{user.displayName}</p>
               <Badge tone={navy ? "gold" : "info"} className="mt-0.5">
-                {user.role === "STUDENT" ? user.studentNumber : user.role === "ADMIN" ? "Administrator" : "Staff"}
+                {roleBadgeText(user)}
               </Badge>
             </div>
             <button

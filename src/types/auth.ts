@@ -1,7 +1,9 @@
-export type Role = "ADMIN" | "STAFF" | "STUDENT";
+/** ADMIN = superadministrator · STAFF = all-around office staff · REGISTRAR = enrollment · CASHIER = payments · TEACHER = own classes */
+export type Role = "ADMIN" | "STAFF" | "REGISTRAR" | "CASHIER" | "TEACHER" | "STUDENT";
 
 /** Permission names — must match backend/src/config/permissions.ts. */
 export type Permission =
+  | "dashboard:read"
   | "students:read"
   | "students:write"
   | "students:archive"
@@ -30,6 +32,8 @@ export type Permission =
   | "users:manage"
   | "audit:read"
   | "settings:manage"
+  | "account:self"
+  | "teaching:own"
   | "portal:self";
 
 export interface CurrentUser {
@@ -67,6 +71,9 @@ export interface UserAccount {
   position: string | null;
   studentId: number | null;
   studentNumber: string | null;
+  /** TEACHER accounts: the linked instructor. */
+  instructorId: number | null;
+  instructorName: string | null;
   isActive: boolean;
   mustChangePassword: boolean;
   isLocked: boolean;

@@ -26,7 +26,7 @@ export function StudentLayout() {
   const sidebar = <Sidebar groups={STUDENT_NAV} tone="light" homePath="/student" subtitle="Student Portal" onNavigate={closeDrawer} onLogout={handleLogout} />;
 
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="min-h-dvh bg-background print:bg-white">
       <a href="#main" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-50 focus:rounded focus:bg-surface focus:px-3 focus:py-2">
         Skip to content
       </a>
@@ -36,7 +36,8 @@ export function StudentLayout() {
         {sidebar}
       </MobileDrawer>
 
-      <div className="lg:pl-64">
+      {/* On paper there is no sidebar, so the page uses the full width. */}
+      <div className="lg:pl-64 print:pl-0">
         {/* Phone / tablet top bar */}
         <header className="sticky top-0 z-20 flex h-14 items-center justify-between gap-3 border-b border-border bg-surface/95 px-4 backdrop-blur lg:hidden no-print">
           <Logo variant="mark" size="sm" to="/student" />
@@ -59,7 +60,7 @@ export function StudentLayout() {
           </p>
         </header>
 
-        <main id="main" className="mx-auto w-full max-w-6xl px-4 pt-5 pb-28 sm:px-6 lg:px-8 lg:pt-8 lg:pb-10">
+        <main id="main" className="mx-auto w-full max-w-6xl px-4 pt-5 pb-28 sm:px-6 lg:px-8 lg:pt-8 lg:pb-10 print:max-w-none print:p-0">
           <Suspense fallback={<LoadingState label="Loading..." />}>
             {/* Soft fade each time the page changes (key = the page address). */}
           <div key={pathname} className="animate-page-in">

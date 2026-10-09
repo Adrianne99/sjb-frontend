@@ -16,6 +16,8 @@ import { useSearchBox } from "@/hooks/useSearchBox";
 import { auditService } from "@/services/admin.service";
 import type { AuditLog } from "@/types";
 import { formatDateTime } from "@/utils/format";
+import { FilterBar } from "@/components/table/FilterBar";
+import { clearedFilters, countActiveFilters } from "@/utils/filters";
 
 // Must match AUDIT_ACTIONS in backend/src/services/audit/audit.service.ts
 const ACTIONS = [
@@ -41,9 +43,12 @@ function actionTone(action: string): BadgeTone {
 
 const label = (value: string) => value.replace(/_/g, " ").toLowerCase().replace(/^\w/, (char) => char.toUpperCase());
 
+/** Filters in the Filters panel (the search box is separate). */
+const FILTER_KEYS = ["action", "entityType", "dateFrom", "dateTo"] as const;
+
 export default function AuditLogsPage() {
   useDocumentTitle("Audit Logs");
-  const [filters, setFilter] = useQueryState({ search: "", action: "", entityType: "", dateFrom: "", dateTo: "", page: "1" });
+  const [filters, setFilter, setFilters] = useQueryState({ search: "", action: "", entityType: "", dateFrom: "", dateTo: "", page: "1" });
   const [searchText, setSearchText] = useSearchBox(filters.search, (value) => setFilter("search", value));
   const { data, loading, error, reload } = useApi(
     () => auditService.list({ ...filters, pageSize: 25 }),
@@ -54,13 +59,18 @@ export default function AuditLogsPage() {
     <>
       <PageHeader title="Audit Logs" description="A permanent record of logins and important changes to grades, payments, students, enrollment and accounts." />
       <Card>
-        <div className="grid gap-3 border-b border-border p-4 sm:grid-cols-2 lg:grid-cols-6">
-          <SearchInput value={searchText} onChange={setSearchText} label="Search logs" placeholder="Description or username..." className="sm:col-span-2" />
+        <FilterBar
+          search={
+            <SearchInput value={searchText} onChange={setSearchText} label="Search logs" placeholder="Description or username..." />
+          }
+          activeCount={countActiveFilters(filters, FILTER_KEYS)}
+          onClear={() => setFilters(clearedFilters(FILTER_KEYS))}
+        >
           <Select label="Action" hideLabel placeholder="All actions" value={filters.action} onChange={(event) => setFilter("action", event.target.value)} options={ACTIONS.map((action) => ({ value: action, label: label(action) }))} />
           <Select label="Record type" hideLabel placeholder="All record types" value={filters.entityType} onChange={(event) => setFilter("entityType", event.target.value)} options={ENTITY_TYPES.map((type) => ({ value: type, label: label(type) }))} />
           <TextInput label="From date" hideLabel type="date" value={filters.dateFrom} onChange={(event) => setFilter("dateFrom", event.target.value)} />
           <TextInput label="To date" hideLabel type="date" value={filters.dateTo} onChange={(event) => setFilter("dateTo", event.target.value)} />
-        </div>
+        </FilterBar>
         {error ? (
           <ErrorState message={error} onRetry={reload} />
         ) : (

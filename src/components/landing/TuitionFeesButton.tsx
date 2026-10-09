@@ -2,7 +2,6 @@
 // backend builds the PDF from Settings → Tuition & fees, so it always matches
 // what the Accounting Office charges.
 import { FileText } from "lucide-react";
-import { buttonClasses } from "@/components/ui/button-styles";
 import { feeService } from "@/services/fee.service";
 import { cn } from "@/utils/cn";
 
@@ -12,7 +11,10 @@ export function TuitionFeesButton({ className }: { className?: string }) {
       href={feeService.tuitionPdfUrl}
       target="_blank"
       rel="noopener noreferrer"
-      className={buttonClasses("ghost", "lg", false, cn("rounded-full! border border-primary-200 px-7! text-primary-900! hover:bg-primary-50!", className))}
+      className={cn(
+        "inline-flex h-11 items-center gap-2 rounded-full border border-primary-300 bg-surface px-6 text-sm font-semibold text-primary-900 transition-colors hover:border-primary-500 hover:bg-primary-50",
+        className,
+      )}
     >
       <FileText className="size-4" aria-hidden="true" />
       View tuition fees (PDF)

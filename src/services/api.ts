@@ -58,8 +58,16 @@ function buildUrl(path: string, query?: QueryParams) {
   return queryString ? `${url}?${queryString}` : url;
 }
 
-async function request<T>(method: "GET" | "POST" | "PUT" | "DELETE", path: string, options: { body?: unknown; query?: QueryParams; file?: Blob } = {}) {
-  const headers: Record<string, string> = { Accept: "application/json" };
+interface RequestOptions {
+  body?: unknown;
+  query?: QueryParams;
+  file?: Blob;
+  /** Extra headers, e.g. the chatbot's X-Chat-CSRF-Token. */
+  headers?: Record<string, string>;
+}
+
+async function request<T>(method: "GET" | "POST" | "PUT" | "DELETE", path: string, options: RequestOptions = {}) {
+  const headers: Record<string, string> = { Accept: "application/json", ...options.headers };
   if (options.file) headers["Content-Type"] = options.file.type;
   else if (options.body !== undefined) headers["Content-Type"] = "application/json";
   if (method !== "GET" && csrfToken) headers["X-CSRF-Token"] = csrfToken;
@@ -86,8 +94,9 @@ async function request<T>(method: "GET" | "POST" | "PUT" | "DELETE", path: strin
       payload?.errors ?? {},
       payload?.details,
     );
-    // An expired session on a normal request -> let AuthContext send the user to login.
-    if (response.status === 401 && !path.startsWith("/auth/")) onUnauthorized?.();
+    // An expired LOGIN session on a normal request -> let AuthContext send the user to login.
+    // (An ended chatbot session — CHAT_SESSION_* — is handled by the chat window instead.)
+    if (response.status === 401 && !path.startsWith("/auth/") && !error.code.startsWith("CHAT_")) onUnauthorized?.();
     throw error;
   }
 
@@ -109,9 +118,9 @@ export const api = {
   },
 
   /** POST/PUT/DELETE return the full envelope so pages can show `message`. */
-  post: <T>(path: string, body?: unknown) => request<T>("POST", path, { body: body ?? {} }),
+  post: <T>(path: string, body?: unknown, headers?: Record<string, string>) => request<T>("POST", path, { body: body ?? {}, headers }),
   put: <T>(path: string, body?: unknown) => request<T>("PUT", path, { body: body ?? {} }),
-  delete: <T>(path: string) => request<T>("DELETE", path),
+  delete: <T>(path: string, headers?: Record<string, string>) => request<T>("DELETE", path, { headers }),
   /** Sends a file (e.g. a photo) as the raw request body. */
   upload: <T>(path: string, file: Blob) => request<T>("PUT", path, { file }),
 };

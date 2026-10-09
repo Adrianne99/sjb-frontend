@@ -86,7 +86,7 @@ export default function StudentDashboardPage() {
       </section>
 
       {/* Summary */}
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <SummaryTile to="/student/grades" icon={GraduationCap} label={data.currentTermAverage ? "Current term average" : "General average"} accent>
           <p className="font-display text-2xl font-semibold text-primary-900 tabular-nums">{data.currentTermAverage ?? data.overallAverage ?? "—"}</p>
           <p className="mt-1 text-xs text-ink-muted">{data.currentTermAverage || data.overallAverage ? `Scale: ${data.gradingScale}` : "No published grades yet"}</p>
@@ -146,7 +146,7 @@ export default function StudentDashboardPage() {
           {data.announcements.length === 0 ? (
             <EmptyState icon={Megaphone} title="No announcements available." />
           ) : (
-            <ul className="grid gap-4 md:grid-cols-3">
+            <ul className="grid grid-cols-1 gap-4 md:grid-cols-3">
               {data.announcements.map((announcement) => (
                 <li key={announcement.id}>
                   <AnnouncementCard announcement={announcement} compact />

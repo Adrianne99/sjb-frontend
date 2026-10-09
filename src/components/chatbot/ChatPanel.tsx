@@ -1,13 +1,22 @@
 // The chat window. Messages go to POST /api/chatbot/message on our backend,
 // which answers with AI (Saint John Bosco topics only) or the FAQ.
 //
+// No account needed: when the window opens, it reuses this browser's chat
+// session (and shows its earlier messages) or starts a new one. If the session
+// expires, a friendly note offers to start a new conversation.
+//
+// After the first opening, closing the window only HIDES it, so a question
+// that is still waiting for its answer keeps going. Each new reply calls
+// `onReply`, which the chat button uses to show the number of unread replies.
+//
 // Phones: full screen, like a messaging app. When the keyboard opens, the
 // window shrinks to the visible area (visualViewport), so the input stays just
 // above the keyboard and the latest message stays in view.
 // Larger screens: a floating window above the chat button.
-import { Send, ShieldCheck, X } from "lucide-react";
+import { RotateCcw, Send, ShieldCheck, X } from "lucide-react";
 import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { getErrorMessage } from "@/services/api";
+import { CHAT_EXPIRED_MESSAGE, chatSession, isChatSessionEnded } from "@/services/chat-session";
 import { chatbotService } from "@/services/chatbot.service";
 import { BotAvatar } from "./BotAvatar";
 import { ChatMessage, TypingIndicator, type ChatEntry } from "./ChatMessage";
@@ -20,17 +29,19 @@ const WELCOME: ChatEntry = {
 
 const STARTER_QUESTIONS = ["What are the admission requirements?", "How much is the tuition?", "How do I log in to the Student Portal?"];
 
-/** How many earlier messages are sent along, so follow-up questions make sense. */
-const HISTORY_SIZE = 6;
+/** starting = connecting to the server · ended = the session expired · unavailable = could not connect */
+type ChatStatus = "starting" | "ready" | "ended" | "unavailable";
 
 const PHONE_QUERY = "(max-width: 639.98px)";
 
 /**
  * On phones, keeps the chat exactly the size of the visible screen (it changes
  * when the keyboard opens) and stops the page behind it from scrolling.
+ * Does nothing while the chat is closed (`active` = false).
  */
-function useFitToVisibleScreen(panelRef: React.RefObject<HTMLElement | null>, onResize: () => void) {
+function useFitToVisibleScreen(panelRef: React.RefObject<HTMLElement | null>, onResize: () => void, active: boolean) {
   useEffect(() => {
+    if (!active) return;
     const phone = window.matchMedia(PHONE_QUERY);
     const viewport = window.visualViewport;
     const html = document.documentElement;
@@ -60,13 +71,22 @@ function useFitToVisibleScreen(panelRef: React.RefObject<HTMLElement | null>, on
       phone.removeEventListener("change", apply);
       html.style.overflow = previousOverflow;
     };
-  }, [panelRef, onResize]);
+  }, [panelRef, onResize, active]);
 }
 
-export function ChatPanel({ onClose }: { onClose: () => void }) {
+interface ChatPanelProps {
+  /** false = hidden (the conversation and any waiting question are kept). */
+  open: boolean;
+  onClose: () => void;
+  /** Called whenever SJB Assistant adds a message (a reply, an error or the "expired" note). */
+  onReply: () => void;
+}
+
+export function ChatPanel({ open, onClose, onReply }: ChatPanelProps) {
   const [messages, setMessages] = useState<ChatEntry[]>([WELCOME]);
   const [input, setInput] = useState("");
   const [typing, setTyping] = useState(false);
+  const [status, setStatus] = useState<ChatStatus>("starting");
   const nextId = useRef(1);
   const listRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -76,33 +96,68 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
   const scrollToLatest = useCallback(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight });
   }, []);
-  useFitToVisibleScreen(panelRef, scrollToLatest);
+  useFitToVisibleScreen(panelRef, scrollToLatest, open);
 
-  useEffect(() => {
-    // On phones, opening the keyboard right away would cover the welcome message.
-    if (!window.matchMedia(PHONE_QUERY).matches) inputRef.current?.focus();
+  /** Reuses this browser's chat (with its earlier messages) or starts a new one. */
+  const connect = useCallback(async () => {
+    setStatus("starting");
+    try {
+      await chatSession.ensure();
+      const earlier = await chatbotService.history();
+      setMessages([WELCOME, ...earlier.map((message) => ({ id: nextId.current++, from: message.role, text: message.content }))]);
+      setStatus("ready");
+    } catch {
+      setStatus("unavailable");
+    }
   }, []);
 
   useEffect(() => {
+    void connect();
+  }, [connect]);
+
+  useEffect(() => {
+    // On phones, opening the keyboard right away would cover the welcome message.
+    if (open && status === "ready" && !window.matchMedia(PHONE_QUERY).matches) inputRef.current?.focus();
+  }, [open, status]);
+
+  async function startNewConversation() {
+    setStatus("starting");
+    try {
+      await chatSession.restart();
+      setMessages([WELCOME]);
+      setStatus("ready");
+    } catch {
+      setStatus("unavailable");
+    }
+  }
+
+  useEffect(() => {
     listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" });
-  }, [messages, typing]);
+  }, [messages, typing, status, open]);
 
   async function ask(text: string) {
     const question = text.trim();
-    if (!question || typing) return;
-    // Earlier messages of this chat (not the welcome text), oldest first.
-    const history = messages
-      .filter((entry) => entry.id !== WELCOME.id)
-      .slice(-HISTORY_SIZE)
-      .map((entry) => ({ role: entry.from, content: entry.text.slice(0, 1500) }));
-    setMessages((current) => [...current, { id: nextId.current++, from: "user", text: question }]);
+    if (!question || typing || status !== "ready") return;
+    // Earlier messages are kept by the server (in this chat session only).
+    const questionId = nextId.current++;
+    setMessages((current) => [...current, { id: questionId, from: "user", text: question }]);
     setInput("");
     setTyping(true);
     try {
-      const reply = await chatbotService.send(question, history);
+      const reply = await chatSession.send(question);
       setMessages((current) => [...current, { id: nextId.current++, from: "assistant", text: reply.reply }]);
+      onReply();
     } catch (error) {
+      if (isChatSessionEnded(error)) {
+        // Not answered: take the question back out, so it can be sent again in a new conversation.
+        setMessages((current) => current.filter((entry) => entry.id !== questionId));
+        setInput(question);
+        setStatus("ended");
+        onReply();
+        return;
+      }
       setMessages((current) => [...current, { id: nextId.current++, from: "assistant", text: getErrorMessage(error) }]);
+      onReply();
     } finally {
       setTyping(false);
     }
@@ -110,6 +165,7 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
 
   // Suggested questions only show before the conversation starts.
   const hasStarted = messages.some((entry) => entry.from === "user");
+  const canType = status === "ready";
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -119,9 +175,10 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
   return (
     <section
       ref={panelRef}
+      hidden={!open}
       role="dialog"
       aria-label="School assistant chat"
-      className="fixed inset-x-0 top-0 z-60 flex h-dvh animate-slide-up flex-col overflow-hidden bg-surface sm:inset-x-auto sm:top-auto sm:right-6 sm:bottom-24 sm:h-[min(600px,calc(100dvh-8rem))] sm:w-[380px] sm:rounded-2xl sm:border sm:border-border sm:shadow-lg"
+      className="fixed inset-x-0 top-0 z-60 flex h-dvh animate-slide-up flex-col overflow-hidden bg-surface sm:inset-x-auto sm:top-auto sm:right-6 sm:bottom-24 sm:h-[min(600px,calc(100dvh-8rem))] sm:w-[380px] sm:rounded-2xl sm:border sm:border-border sm:shadow-sm"
     >
       <header className="flex shrink-0 items-center gap-3 bg-primary-900 px-4 py-3 text-white">
         <BotAvatar size="md" className="ring-2 ring-white/20" />
@@ -134,14 +191,22 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
         </button>
       </header>
 
-      <div ref={listRef} className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-4 py-4" aria-live="polite">
+      <div ref={listRef} className="min-h-0 flex-1 space-y-3 overflow-x-hidden overflow-y-auto overscroll-contain px-4 py-4" aria-live="polite">
         {messages.map((entry) => (
           <ChatMessage key={entry.id} entry={entry} />
         ))}
         {typing && <TypingIndicator />}
+        {status === "starting" && <p className="text-center text-xs text-ink-muted">Connecting…</p>}
       </div>
 
-      {!hasStarted && (
+      {status === "ended" && (
+        <ChatNotice text={CHAT_EXPIRED_MESSAGE} buttonLabel="Start a new conversation" onClick={() => void startNewConversation()} />
+      )}
+      {status === "unavailable" && (
+        <ChatNotice text="The assistant is not available right now. Please check your connection and try again." buttonLabel="Try again" onClick={() => void connect()} />
+      )}
+
+      {!hasStarted && canType && (
         <div className="flex shrink-0 flex-col items-start gap-2 px-4 pb-3" aria-label="Suggested questions">
           {STARTER_QUESTIONS.map((question) => (
             <button
@@ -166,6 +231,7 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
           value={input}
           onChange={(event) => setInput(event.target.value)}
           maxLength={500}
+          disabled={!canType}
           placeholder="Type your question..."
           autoComplete="off"
           enterKeyHint="send"
@@ -174,7 +240,7 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
         />
         <button
           type="submit"
-          disabled={!input.trim() || typing}
+          disabled={!input.trim() || typing || !canType}
           aria-label="Send message"
           className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary-600 text-white hover:bg-primary-700 disabled:opacity-50 sm:size-11"
         >
@@ -186,5 +252,22 @@ export function ChatPanel({ onClose }: { onClose: () => void }) {
         Answers may be AI-generated — confirm important details with the school. Don't share personal details here.
       </p>
     </section>
+  );
+}
+
+/** A short note above the input with one action (e.g. "Start a new conversation"). */
+function ChatNotice({ text, buttonLabel, onClick }: { text: string; buttonLabel: string; onClick: () => void }) {
+  return (
+    <div role="status" className="flex shrink-0 flex-col items-start gap-2 border-t border-border bg-primary-50 px-4 py-3 text-sm text-primary-900">
+      <p>{text}</p>
+      <button
+        type="button"
+        onClick={onClick}
+        className="inline-flex items-center gap-1.5 rounded-full bg-primary-600 px-3.5 py-2 text-sm font-medium text-white hover:bg-primary-700 sm:py-1.5 sm:text-xs"
+      >
+        <RotateCcw className="size-3.5" aria-hidden="true" />
+        {buttonLabel}
+      </button>
+    </div>
   );
 }

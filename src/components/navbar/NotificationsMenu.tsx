@@ -1,5 +1,5 @@
-// Bell menu for staff: shows real items that need attention (no fake alerts).
-import { Bell, ClipboardList, FileText } from "lucide-react";
+// Bell menu for staff and teachers: shows real items that need attention (no fake alerts).
+import { Bell, ClipboardList, FileText, Undo2, Upload } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router";
 import { Spinner } from "@/components/ui/Spinner";
@@ -7,10 +7,15 @@ import { useAuth } from "@/hooks/useAuth";
 import { academicService } from "@/services/academic.service";
 import { enrollmentService } from "@/services/enrollment.service";
 import { gradeService } from "@/services/grade.service";
+import { teachingService } from "@/services/teaching.service";
 
 interface Counts {
   pendingEnrollments: number | null;
   draftGrades: number | null;
+  /** Staff: classes teachers submitted for review. */
+  submittedClasses: number | null;
+  /** Teachers: their classes returned for changes. */
+  returnedClasses: number | null;
 }
 
 export function NotificationsMenu() {
@@ -21,13 +26,17 @@ export function NotificationsMenu() {
 
   async function load() {
     const term = await academicService.currentTerm().catch(() => null);
-    const [pending, drafts] = await Promise.all([
+    const [pending, drafts, submitted, returned] = await Promise.all([
       can("enrollments:read") && term
         ? enrollmentService.list({ status: "PENDING", semesterId: term.id, pageSize: 1 }).then((result) => result.meta.total).catch(() => null)
         : null,
       can("grades:read") && term ? gradeService.list({ status: "DRAFT", semesterId: term.id, pageSize: 1 }).then((result) => result.meta.total).catch(() => null) : null,
+      can("grades:publish") ? gradeService.pendingSubmissions().then((rows) => rows.length).catch(() => null) : null,
+      can("teaching:own")
+        ? teachingService.classes(term?.id).then((rows) => rows.filter((row) => row.submission?.status === "RETURNED").length).catch(() => null)
+        : null,
     ]);
-    setCounts({ pendingEnrollments: pending, draftGrades: drafts });
+    setCounts({ pendingEnrollments: pending, draftGrades: drafts, submittedClasses: submitted, returnedClasses: returned });
   }
 
   function toggle() {
@@ -57,7 +66,9 @@ export function NotificationsMenu() {
         counts.pendingEnrollments
           ? { icon: ClipboardList, text: `${counts.pendingEnrollments} pending enrollment(s) this term`, to: "/admin/enrollment?status=PENDING" }
           : null,
-        counts.draftGrades ? { icon: FileText, text: `${counts.draftGrades} draft grade(s) not yet published`, to: "/admin/grades" } : null,
+        counts.submittedClasses ? { icon: Upload, text: `${counts.submittedClasses} class(es) submitted by teachers, ready to publish`, to: "/admin/grades" } : null,
+        counts.draftGrades ? { icon: FileText, text: `${counts.draftGrades} draft grade(s) not yet published`, to: "/admin/grades?draft=1" } : null,
+        counts.returnedClasses ? { icon: Undo2, text: `${counts.returnedClasses} of your class(es) returned for changes`, to: "/admin/my-classes" } : null,
       ].filter((item) => item !== null)
     : [];
 
