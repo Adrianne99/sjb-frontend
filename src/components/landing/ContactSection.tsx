@@ -46,8 +46,11 @@ export function ContactSection() {
               <span className="flex size-11 items-center justify-center rounded-full bg-gold-400 text-primary-950" aria-hidden="true">
                 <item.icon className="size-5" strokeWidth={1.75} />
               </span>
-              <dt className="self-center text-sm font-semibold text-primary-900">{item.label}</dt>
-              <dd className="col-start-2 self-center sm:col-start-3">
+              {/* Label and first line of the value both line up with the icon's middle,
+                  so multi-line values (like the address) grow downward instead of
+                  pushing the label out of line. */}
+              <dt className="flex h-11 items-center text-sm font-semibold text-primary-900">{item.label}</dt>
+              <dd className="col-start-2 sm:col-start-3 sm:pt-2.5">
                 <p className="text-base wrap-break-word text-ink-soft">{item.value}</p>
                 {item.note && <p className="mt-1 text-xs text-ink-muted">{item.note}</p>}
               </dd>

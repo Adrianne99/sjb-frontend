@@ -142,7 +142,7 @@ export const school = {
     address: "Kalentong, Mandaluyong City, Metro Manila, Philippines",
     addressNote: "#55 Shaw Blvd, General Kalentong, Mandaluyong City, 1550 Metro Manila, Philippines",
     phone: "(02) 0000-0000",
-    email: "Sjb@school.edu.ph",
+    email: "sjb@school.edu.ph",
     officeHours: "Monday to Friday, 8:00 AM – 5:00 PM",
   },
 
